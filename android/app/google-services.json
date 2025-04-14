@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "411696594284",
+    "project_id": "meal-prep-app-fba42",
+    "storage_bucket": "meal-prep-app-fba42.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:411696594284:android:8b42f008c686d2e50f0749",
+        "android_client_info": {
+          "package_name": "com.example.bookapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD0pjhwAvI8fuXx84hnV8OcEXjrcerovQs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
