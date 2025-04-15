@@ -18,17 +18,14 @@ class AuthService {
         password: password,
       );
       User? user = result.user;
+
       if (user != null) {
         await _firestore.collection('users').doc(user.uid).set({
           'name': name,
           'email': email,
           'date_of_birth': Timestamp.fromDate(dateOfBirth),
           'created_at': Timestamp.now(),
-          'role': 'user'
-        });
-        await _firestore.collection('users').doc(user.uid).collection('messages').add({
-          'content': '', 
-          'timestamp': Timestamp.now(),
+          'role' : 'user'
         });
         await user.updateDisplayName(name);
         await user.reload();
@@ -57,6 +54,7 @@ class AuthService {
   Future<void> logoutUser() async {
     await _auth.signOut();
   }
+
   Future<void> updateDisplayName(String name) async {
     User? user = _auth.currentUser;
     if (user != null) {
@@ -139,7 +137,6 @@ class AuthService {
     if (user != null) {
       try {
         await user.updateProfile(displayName: newName);
-
         await user.reload();
 
         print('Name updated successfully');
@@ -151,7 +148,7 @@ class AuthService {
     }
   }
 
-  Future<List<Map<String, dynamic>>> getUserMessages(String userId) async {
+  Future<List<Message>> getUserMessages(String userId) async {
     try {
       QuerySnapshot<Map<String, dynamic>> messageSnapshot = await FirebaseFirestore.instance
           .collection('users')
@@ -159,8 +156,8 @@ class AuthService {
           .collection('messages')
           .orderBy('timestamp')
           .get();
-      List<Map<String, dynamic>> messages = messageSnapshot.docs.map((doc) {
-        return doc.data();
+      List<Message> messages = messageSnapshot.docs.map((doc) {
+        return Message.fromDoc(doc);
       }).toList();
       return messages;
     } catch (e) {
@@ -176,8 +173,9 @@ class AuthService {
   }) async {
     try {
       Timestamp timestamp = Timestamp.now();
+      final messageId = FirebaseFirestore.instance.collection('tmp').doc().id;
       Message message = Message(
-        id: '',
+        id: messageId,
         text: text,
         sender: sender,
         userId: userId,
@@ -188,10 +186,14 @@ class AuthService {
           .collection('users')
           .doc(userId)
           .collection('messages')
-          .add(message.toMap());
+          .doc(messageId)
+          .set(message.toMap());
       await FirebaseFirestore.instance
-          .collection(messageBoardId)
-          .add(message.toMap());
+          .collection('messageboard')
+          .doc(messageBoardId)
+          .collection('messages')
+          .doc(messageId)
+          .set(message.toMap());
     } catch (e) {
       throw Exception('Error adding message: $e');
     }
@@ -200,7 +202,9 @@ class AuthService {
   Future<List<Message>> getMessagesFromCollection({required String messageBoardId}) async {
     try {
       QuerySnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore.instance
-          .collection(messageBoardId)
+          .collection('messageboard')
+          .doc(messageBoardId)
+          .collection('messages')
           .orderBy('timestamp', descending: true)
           .get();
       List<Message> messages = snapshot.docs.map((doc) {
@@ -209,6 +213,87 @@ class AuthService {
       return messages;
     } catch (e) {
       throw Exception('Error retrieving messages: $e');
+    }
+  }
+
+  Future<String> createMessageBoard({
+    required String title,
+    required String createdByUserId,
+    required String imageUrl,
+  }) async {
+    try {
+      DocumentReference messageBoardRef =
+          FirebaseFirestore.instance.collection('messageboard').doc();
+      await messageBoardRef.set({
+        'title': title,
+        'created_by': createdByUserId,
+        'created_at': Timestamp.now(),
+        'image' : imageUrl,
+      });
+      return messageBoardRef.id;
+    } catch (e) {
+      throw Exception('Error creating message board: $e');
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getAllMessageBoards() async {
+    try {
+      QuerySnapshot<Map<String, dynamic>> snapshot = await FirebaseFirestore.instance
+          .collection('messageboard')
+          .orderBy('created_at', descending: true)
+          .get();
+      List<Map<String, dynamic>> boards = snapshot.docs.map((doc) {
+        final data = doc.data();
+        data['id'] = doc.id; 
+        return data;
+      }).toList();
+      return boards;
+    } catch (e) {
+      throw Exception('Error retrieving message boards: $e');
+    }
+  }
+
+  Future<void> deleteMessageBoard(String messageBoardId) async {
+    try {
+      QuerySnapshot<Map<String, dynamic>> messagesSnapshot = await FirebaseFirestore.instance
+          .collection('messageboard')
+          .doc(messageBoardId)
+          .collection('messages')
+          .get();
+      for (var doc in messagesSnapshot.docs) {
+        await doc.reference.delete();
+      }
+      await FirebaseFirestore.instance
+          .collection('messageboard')
+          .doc(messageBoardId)
+          .delete();
+      print("Message board and all its messages deleted successfully");
+    } catch (e) {
+      throw Exception('Error deleting message board: $e');
+    }
+  }
+
+  Future<void> deleteMessage({
+    required String messageBoardId,
+    required String messageId,
+    required String userId,
+  }) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('messageboard')
+          .doc(messageBoardId)
+          .collection('messages')
+          .doc(messageId)
+          .delete();
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .collection('messages')
+          .doc(messageId)
+          .delete();
+      print('Message deleted from message board.');
+    } catch (e) {
+      throw Exception('Error deleting message: $e');
     }
   }
 

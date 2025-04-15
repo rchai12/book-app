@@ -1,15 +1,19 @@
-import 'login_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'authentication.dart';
 import 'package:intl/intl.dart';
+import 'message_history.dart';
 
 class ProfilePage extends StatefulWidget {
   User user;
-  final AuthService _authService = AuthService();
+  final AuthService authService;
 
-  ProfilePage({super.key, required this.user});
+  ProfilePage({
+    super.key, 
+    required this.user,
+    required this.authService,
+  });
 
   @override
   _ProfilePageState createState() => _ProfilePageState();
@@ -31,12 +35,12 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _initializeUserData() async {
     try {
       DocumentSnapshot<Map<String, dynamic>>? userDoc =
-          await widget._authService.getUserData();
+          await widget.authService.getUserData();
       if (userDoc != null && userDoc.exists) {
         var userData = userDoc.data()!;
         widget.user = FirebaseAuth.instance.currentUser!;
         _nameController = TextEditingController(text: userData['name']);
-        _dob = (userData['dob'] as Timestamp).toDate();
+        _dob = (userData['date_of_birth'] as Timestamp).toDate();
         setState(() {});
       }
     } catch (e) {
@@ -56,7 +60,7 @@ class _ProfilePageState extends State<ProfilePage> {
     });
 
     try {
-      await widget._authService.updateName(_nameController.text.trim());
+      await widget.authService.updateName(_nameController.text.trim());
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Name updated successfully')),
       );
@@ -80,7 +84,7 @@ class _ProfilePageState extends State<ProfilePage> {
       await FirebaseFirestore.instance
           .collection('users')
           .doc(widget.user.uid)
-          .update({'dob': Timestamp.fromDate(newDob)});
+          .update({'date_of_birth': Timestamp.fromDate(newDob)});
       setState(() {
         _dob = newDob;
         _isEditingDob = false;
@@ -94,21 +98,6 @@ class _ProfilePageState extends State<ProfilePage> {
       );
     } finally {
       setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _logout() async {
-    try {
-      await widget._authService.logoutUser();
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => LoginPage()),
-      );
-    } catch (e) {
-      print('Error logging out: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error logging out: $e')),
-      );
     }
   }
 
@@ -135,12 +124,6 @@ class _ProfilePageState extends State<ProfilePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profile'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.logout),
-            onPressed: _logout,
-          ),
-        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -174,18 +157,53 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
             const SizedBox(height: 16),
-            ListTile(
-              title: Text('Date of Birth: $formattedDob'),
-              trailing: IconButton(
-                icon: Icon(Icons.calendar_today),
-                onPressed: _pickDob,
-              ),
+            _isEditingDob
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Date of Birth: $formattedDob'),
+                    const SizedBox(height: 8),
+                    ElevatedButton(
+                      onPressed: _pickDob,
+                      child: _isLoading ? CircularProgressIndicator() : Text('Pick New Date'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        setState(() => _isEditingDob = false);
+                      },
+                      child: const Text('Cancel'),
+                    ),
+                  ],
+                )
+              : ListTile(
+                  title: Text('Date of Birth: $formattedDob'),
+                  trailing: IconButton(
+                    icon: Icon(Icons.edit_calendar),
+                    onPressed: () {
+                      setState(() => _isEditingDob = true);
+                    },
+                  ),
+                ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => MessageHistoryPage(
+                      user: widget.user,
+                      authService: widget.authService,
+                    ),
+                  ),
+                );
+              },
+              child: const Text('Message History'),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () async {
-                await widget._authService.currentUser!.reload();
-                widget.user = widget._authService.currentUser!;
+                await widget.authService.currentUser!.reload();
+                widget.user = widget.authService.currentUser!;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('Account Reloaded')),
                 );

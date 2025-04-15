@@ -7,16 +7,16 @@ import 'profile_page.dart';
 import 'login_page.dart';
 import 'message_board.dart';
 
-class HomePage extends StatefulWidget {
+class MessageBoardsPage extends StatefulWidget {
   User user;
   final authService = AuthService();
-  HomePage({super.key, required this.user});
+  MessageBoardsPage({super.key, required this.user});
 
   @override
-  _HomePageState createState() => _HomePageState();
+  _MessageBoardsPageState createState() => _MessageBoardsPageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _MessageBoardsPageState extends State<MessageBoardsPage> {
   late Future<List<Map<String, dynamic>>> _messageBoards;
   int _currentIndex = 0;
   late bool _isAdmin = false;

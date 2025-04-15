@@ -3,20 +3,26 @@ import 'google_books_api.dart';
 import 'book.dart';
 import 'book_details.dart';
 
-class BookSearchPage extends StatefulWidget {
+class TrendingBooksPage extends StatefulWidget {
   @override
-  _BookSearchPageState createState() => _BookSearchPageState();
+  _TrendingBooksPageState createState() => _TrendingBooksPageState();
 }
 
-class _BookSearchPageState extends State<BookSearchPage> {
-  final TextEditingController _controller = TextEditingController();
+class _TrendingBooksPageState extends State<TrendingBooksPage> {
   List<Book> _books = [];
   bool _loading = false;
 
-  void _search() async {
+  @override
+  void initState() {
+    super.initState();
+    _fetchTrendingBooks();
+  }
+
+  void _fetchTrendingBooks() async {
     setState(() => _loading = true);
+    
     try {
-      final results = await GoogleBooksApi.searchBooks(_controller.text);
+      final results = await GoogleBooksApi.searchBooks('bestsellers OR trending OR new releases');
       setState(() => _books = results);
     } catch (e) {
       print(e);
@@ -28,22 +34,11 @@ class _BookSearchPageState extends State<BookSearchPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Books Search')),
+      appBar: AppBar(title: Text('Trending Books')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            TextField(
-              controller: _controller,
-              decoration: InputDecoration(
-                labelText: 'Search our Books!',
-                suffixIcon: IconButton(
-                  icon: Icon(Icons.search),
-                  onPressed: _search,
-                ),
-              ),
-            ),
-            SizedBox(height: 20),
             _loading
                 ? CircularProgressIndicator()
                 : Expanded(
@@ -63,7 +58,7 @@ class _BookSearchPageState extends State<BookSearchPage> {
                             subtitle: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                if (book.subtitle.isNotEmpty) 
+                                if (book.subtitle.isNotEmpty)
                                   Text(book.subtitle, style: TextStyle(fontWeight: FontWeight.w500)),
                                 Text(book.authors.join(', ')),
                                 if (book.publisher.isNotEmpty)
@@ -71,12 +66,12 @@ class _BookSearchPageState extends State<BookSearchPage> {
                               ],
                             ),
                             onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => BookDetailsPage(book: book),
-                                ),
-                              );
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => BookDetailsPage(book: book),
+                                  ),
+                                );
                             },
                           ),
                         );
