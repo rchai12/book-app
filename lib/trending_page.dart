@@ -57,18 +57,37 @@ class _TrendingBooksPageState extends State<TrendingBooksPage> {
       setState(() {
         _favoriteIds.remove(book.id);
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${book.title} removed from Favorites!'),
+          duration: Duration(seconds: 1),
+        ),
+      );
     } else {
       await widget.authService.addBookToFavorites(book);
       setState(() {
         _favoriteIds.add(book.id);
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${book.title} added to Favorites!'),
+          duration: Duration(seconds: 1),
+        ),
+      );
     }
   }
 
   void _handleAddToReadingList(Book book) async {
     if (_readingListIds.contains(book.id)) {
+      await widget.authService.removeBookFromReadingList(book.id);
+      setState(() {
+        _readingListIds.remove(book.id);
+      });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('This book is already in your reading list.')),
+        SnackBar(
+          content: Text('${book.title} removed from reading list!'),
+          duration: Duration(seconds: 1),
+        ),
       );
     } else {
       await widget.authService.addBookToReadingList(
@@ -79,7 +98,10 @@ class _TrendingBooksPageState extends State<TrendingBooksPage> {
         _readingListIds.add(book.id);
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${book.title} added to reading list!')),
+        SnackBar(
+          content: Text('${book.title} added to reading list!'),
+          duration: Duration(seconds: 1),
+        ),
       );
     }
   }
@@ -101,7 +123,7 @@ class _TrendingBooksPageState extends State<TrendingBooksPage> {
                         crossAxisCount: 2,
                         crossAxisSpacing: 16,
                         mainAxisSpacing: 16,
-                        childAspectRatio: 0.75,
+                        childAspectRatio: 0.6,
                       ),
                       itemCount: _books.length,
                       itemBuilder: (context, index) {
@@ -114,17 +136,21 @@ class _TrendingBooksPageState extends State<TrendingBooksPage> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => BookDetailsPage(book: book,  user: widget.user, authService: widget.authService,),
+                                  builder: (_) => BookDetailsPage(
+                                    book: book,
+                                    user: widget.user,
+                                    authService: widget.authService,
+                                  ),
                                 ),
                               );
                             },
                             child: Column(
-                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 if (book.thumbnail.isNotEmpty)
                                   Image.network(
                                     book.thumbnail,
-                                    height: 150,
+                                    height: 140,
                                     width: double.infinity,
                                     fit: BoxFit.cover,
                                   ),
@@ -132,7 +158,10 @@ class _TrendingBooksPageState extends State<TrendingBooksPage> {
                                   padding: const EdgeInsets.all(8.0),
                                   child: Text(
                                     book.title,
-                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -142,10 +171,11 @@ class _TrendingBooksPageState extends State<TrendingBooksPage> {
                                   child: Text(
                                     book.authors.join(', '),
                                     style: TextStyle(fontSize: 14, color: Colors.grey),
-                                    maxLines: 1, 
-                                    overflow: TextOverflow.ellipsis, 
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
+                                Spacer(),
                                 Padding(
                                   padding: const EdgeInsets.all(8.0),
                                   child: Row(
@@ -158,9 +188,16 @@ class _TrendingBooksPageState extends State<TrendingBooksPage> {
                                         ),
                                         onPressed: () => _toggleFavorite(book),
                                       ),
-                                      ElevatedButton(
+                                      IconButton(
+                                        icon: Icon(
+                                          _readingListIds.contains(book.id)
+                                              ? Icons.bookmark
+                                              : Icons.bookmark_outline,
+                                        ),
+                                        tooltip: _readingListIds.contains(book.id)
+                                            ? 'Already in Reading List'
+                                            : 'Read Later',
                                         onPressed: () => _handleAddToReadingList(book),
-                                        child: Text('Read Later'),
                                       ),
                                     ],
                                   ),

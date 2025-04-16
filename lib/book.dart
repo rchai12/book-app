@@ -51,21 +51,45 @@ class Book {
   }
 
   factory Book.fromMap(Map<String, dynamic> json) {
+    final volumeInfo = json['volumeInfo'] ?? {};
+    final imageLinks = volumeInfo['imageLinks'] ?? {};
+
     return Book(
-      id: json['id'],
-      title: json['title'],
-      subtitle: json['subtitle'] ?? '',
-      authors: List<String>.from(json['authors'] ?? []),
-      description: json['description'] ?? '',
-      publisher: json['publisher'] ?? '',
-      publishedDate: json['publishedDate'] ?? '',
-      pageCount: json['pageCount'] ?? 0,
-      categories: List<String>.from(json['categories'] ?? []),
-      averageRating: json['averageRating']?.toDouble() ?? 0.0,
-      thumbnail: json['thumbnail'] ?? '',
-      previewLink: json['previewLink'] ?? '',
-      infoLink: json['infoLink'] ?? '',
-      language: json['language'] ?? '',
+      id: json['id'] ?? '',
+      title: volumeInfo['title'] ?? 'Untitled',
+      subtitle: volumeInfo['subtitle'] ?? '',
+      authors: List<String>.from(volumeInfo['authors'] ?? ['Unknown']),
+      description: volumeInfo['description'] ?? '',
+      publisher: volumeInfo['publisher'] ?? '',
+      publishedDate: volumeInfo['publishedDate'] ?? '',
+      pageCount: volumeInfo['pageCount'] ?? 0,
+      categories: List<String>.from(volumeInfo['categories'] ?? []),
+      averageRating: (volumeInfo['averageRating'] != null)
+          ? (volumeInfo['averageRating'] as num).toDouble()
+          : 0.0,
+      thumbnail: imageLinks['thumbnail'] ?? '',
+      previewLink: volumeInfo['previewLink'] ?? '',
+      infoLink: volumeInfo['infoLink'] ?? '',
+      language: volumeInfo['language'] ?? '',
+    );
+  }
+
+  factory Book.fromFirestore(Map<String, dynamic> data) {
+    return Book(
+      id: data['id'] ?? '',
+      title: data['title'] ?? 'Untitled',
+      subtitle: data['subtitle'] ?? '',
+      authors: List<String>.from(data['authors'] ?? ['Unknown']),
+      description: data['description'] ?? '',
+      publisher: data['publisher'] ?? '',
+      publishedDate: data['publishedDate'] ?? '',
+      pageCount: data['pageCount'] ?? 0,
+      categories: List<String>.from(data['categories'] ?? []),
+      averageRating: (data['averageRating'] ?? 0.0).toDouble(),
+      thumbnail: data['thumbnail'] ?? '',
+      previewLink: data['previewLink'] ?? '',
+      infoLink: data['infoLink'] ?? '',
+      language: data['language'] ?? '',
     );
   }
 }

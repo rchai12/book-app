@@ -1,27 +1,26 @@
-import 'package:bookapp/reading_status.dart';
 import 'package:flutter/material.dart';
 import 'book.dart';
 import 'book_details.dart';
 import 'authentication.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-class FavoritesPage extends StatefulWidget {
+class ReadingListPage extends StatefulWidget {
   final User user;
   final AuthService authService;
 
-  const FavoritesPage({
+  const ReadingListPage({
     super.key,
     required this.user,
     required this.authService,
   });
 
   @override
-  State<FavoritesPage> createState() => _FavoritesPageState();
+  State<ReadingListPage> createState() => _ReadingListPageState();
 }
 
-class _FavoritesPageState extends State<FavoritesPage> {
-  List<Book> _favoriteBooks = [];
-  Set<String> _readingListIds = {};
+class _ReadingListPageState extends State<ReadingListPage> {
+  List<Book> _readingListBooks = [];
+  Set<String> _favoriteIds = {};
   bool _loading = true;
 
   @override
@@ -33,64 +32,67 @@ class _FavoritesPageState extends State<FavoritesPage> {
   Future<void> _loadLists() async {
     setState(() => _loading = true);
     try {
-      final favorites = await widget.authService.getFavorites();
       final readingList = await widget.authService.getReadingList();
-
+      final favorites = await widget.authService.getFavorites();
       setState(() {
-        _favoriteBooks = favorites;
-        _readingListIds = readingList.map((book) => book.id).toSet();
+        _readingListBooks = readingList;
+        _favoriteIds = favorites.map((book) => book.id).toSet();
       });
     } catch (e) {
-      print('Error loading data: $e');
+      print('Error loading lists: $e');
     } finally {
       setState(() => _loading = false);
     }
   }
 
-  Future<void> _removeFromFavorites(String bookId) async {
-    await widget.authService.removeBookFromFavorites(bookId);
-    setState(() {
-      _favoriteBooks.removeWhere((book) => book.id == bookId);
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Removed from favorites')),
-    );
+  void _toggleFavorite(Book book) async {
+    if (_favoriteIds.contains(book.id)) {
+      await widget.authService.removeBookFromFavorites(book.id);
+      setState(() {
+        _favoriteIds.remove(book.id);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${book.title} removed from Favorites!'),
+          duration: Duration(seconds: 1),
+        ),
+      );
+    } else {
+      await widget.authService.addBookToFavorites(book);
+      setState(() {
+        _favoriteIds.add(book.id);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${book.title} added to Favorites!'),
+          duration: Duration(seconds: 1),
+        ),
+      );
+    }
   }
 
-  Future<void> _handleAddToReadingList(Book book) async {
-    final isInReadingList = _readingListIds.contains(book.id);
-    try {
-      if (isInReadingList) {
-        await widget.authService.removeBookFromReadingList(book.id);
-        _readingListIds.remove(book.id);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Removed from Reading List')),
-        );
-      } else {
-        await widget.authService.addBookToReadingList(book: book, status: ReadingStatus.wantToRead);
-        _readingListIds.add(book.id);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Added to Reading List')),
-        );
-      }
-      setState(() {});
-    } catch (e) {
-      print('Error updating reading list: $e');
-    }
+  void _handleRemoveFromReadingList(Book book) async {
+    await widget.authService.removeBookFromReadingList(book.id);
+    setState(() {
+      _readingListBooks.removeWhere((b) => b.id == book.id);
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${book.title} removed from Reading List')),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('My Favorites')),
+      appBar: AppBar(title: Text('My Reading List')),
       body: _loading
           ? Center(child: CircularProgressIndicator())
-          : _favoriteBooks.isEmpty
-              ? Center(child: Text('No favorite books yet.'))
+          : _readingListBooks.isEmpty
+              ? Center(child: Text('Your reading list is empty.'))
               : Padding(
                   padding: const EdgeInsets.all(16),
                   child: GridView.builder(
-                    itemCount: _favoriteBooks.length,
+                    itemCount: _readingListBooks.length,
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
                       crossAxisSpacing: 16,
@@ -98,8 +100,8 @@ class _FavoritesPageState extends State<FavoritesPage> {
                       childAspectRatio: 0.6,
                     ),
                     itemBuilder: (context, index) {
-                      final book = _favoriteBooks[index];
-                      final isInReadingList = _readingListIds.contains(book.id);
+                      final book = _readingListBooks[index];
+                      final isFavorite = _favoriteIds.contains(book.id);
                       return Card(
                         elevation: 5,
                         child: InkWell(
@@ -154,26 +156,16 @@ class _FavoritesPageState extends State<FavoritesPage> {
                                   children: [
                                     IconButton(
                                       icon: Icon(
-                                        Icons.favorite,
-                                        color: Colors.red,
+                                        isFavorite ? Icons.favorite : Icons.favorite_border,
+                                        color: isFavorite ? Colors.red : null,
                                       ),
-                                      onPressed: () =>
-                                          _removeFromFavorites(book.id),
-                                      tooltip: 'Remove from Favorites',
-                                      iconSize: 20,
-                                      constraints: BoxConstraints(),
-                                      padding: EdgeInsets.zero,
+                                      onPressed: () => _toggleFavorite(book),
                                     ),
                                     IconButton(
-                                      icon: Icon(
-                                        _readingListIds.contains(book.id)
-                                            ? Icons.bookmark
-                                            : Icons.bookmark_outline,
-                                      ),
-                                      tooltip: _readingListIds.contains(book.id)
-                                          ? 'Already in Reading List'
-                                          : 'Read Later',
-                                      onPressed: () => _handleAddToReadingList(book),
+                                      icon: Icon(Icons.bookmark),
+                                      onPressed: () =>
+                                          _handleRemoveFromReadingList(book),
+                                      tooltip: 'Remove from Reading List',
                                     ),
                                   ],
                                 ),

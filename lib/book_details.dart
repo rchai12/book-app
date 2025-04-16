@@ -76,7 +76,7 @@ class _BookDetailsPageState extends State<BookDetailsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Book added to your reading list.'),
-          duration: Duration(seconds: 2),
+          duration: Duration(seconds: 1),
         ),
       );
     }

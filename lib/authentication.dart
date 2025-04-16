@@ -363,7 +363,7 @@ class AuthService {
         QuerySnapshot querySnapshot = await favoritesRef.get();
         List<Book> favoriteBooks = querySnapshot.docs.map((doc) {
           var bookData = doc.data() as Map<String, dynamic>;
-          return Book.fromMap(bookData);
+          return Book.fromFirestore(bookData);
         }).toList();
         return favoriteBooks;
       } catch (e) {
@@ -466,7 +466,7 @@ class AuthService {
         QuerySnapshot querySnapshot = await readingListRef.get();
         List<Book> readingListBooks = querySnapshot.docs.map((doc) {
           var bookData = doc.data() as Map<String, dynamic>;
-          return Book.fromMap(bookData);
+          return Book.fromFirestore(bookData);
         }).toList();
         return readingListBooks;
       } catch (e) {

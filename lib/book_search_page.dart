@@ -57,18 +57,37 @@ class _BookSearchPageState extends State<BookSearchPage> {
       setState(() {
         _favoriteIds.remove(book.id);
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${book.title} removed from Favorites!'),
+          duration: Duration(seconds: 1),
+        ),
+      );
     } else {
       await widget.authService.addBookToFavorites(book);
       setState(() {
         _favoriteIds.add(book.id);
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${book.title} added to Favorites!'),
+          duration: Duration(seconds: 1),
+        ),
+      );
     }
   }
 
   void _handleAddToReadingList(Book book) async {
     if (_readingListIds.contains(book.id)) {
+      await widget.authService.removeBookFromReadingList(book.id);
+      setState(() {
+        _readingListIds.remove(book.id);
+      });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('This book is already in your reading list.')),
+        SnackBar(
+          content: Text('${book.title} removed from reading list!'),
+          duration: Duration(seconds: 1),
+        ),
       );
     } else {
       await widget.authService.addBookToReadingList(
@@ -79,7 +98,10 @@ class _BookSearchPageState extends State<BookSearchPage> {
         _readingListIds.add(book.id);
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${book.title} added to reading list!')),
+        SnackBar(
+          content: Text('${book.title} added to reading list!'),
+          duration: Duration(seconds: 1),
+        ),
       );
     }
   }
@@ -87,22 +109,35 @@ class _BookSearchPageState extends State<BookSearchPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Book Search')),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        title: Container(
+          height: 40,
+          child: TextField(
+            controller: _controller,
+            style: TextStyle(color: Colors.black),
+            decoration: InputDecoration(
+              hintText: 'Search for Books',
+              hintStyle: TextStyle(color: Colors.grey),
+              filled: true,
+              fillColor: Colors.grey[200],
+              contentPadding: EdgeInsets.symmetric(horizontal: 16),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+                borderSide: BorderSide.none,
+              ),
+              suffixIcon: IconButton(
+                icon: Icon(Icons.search),
+                onPressed: _search,
+              ),
+            ),
+          ),
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            TextField(
-              controller: _controller,
-              decoration: InputDecoration(
-                labelText: 'Search for Books',
-                suffixIcon: IconButton(
-                  icon: Icon(Icons.search),
-                  onPressed: _search,
-                ),
-              ),
-            ),
-            SizedBox(height: 20),
             _loading
                 ? CircularProgressIndicator()
                 : Expanded(
@@ -163,6 +198,7 @@ class _BookSearchPageState extends State<BookSearchPage> {
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
+                                Spacer(),
                                 Padding(
                                   padding: const EdgeInsets.all(8.0),
                                   child: Row(
@@ -175,9 +211,16 @@ class _BookSearchPageState extends State<BookSearchPage> {
                                         ),
                                         onPressed: () => _toggleFavorite(book),
                                       ),
-                                      ElevatedButton(
+                                      IconButton(
+                                        icon: Icon(
+                                          _readingListIds.contains(book.id)
+                                              ? Icons.bookmark
+                                              : Icons.bookmark_outline,
+                                        ),
+                                        tooltip: _readingListIds.contains(book.id)
+                                            ? 'Already in Reading List'
+                                            : 'Read Later',
                                         onPressed: () => _handleAddToReadingList(book),
-                                        child: Text('Read Later'),
                                       ),
                                     ],
                                   ),
