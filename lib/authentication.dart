@@ -325,7 +325,6 @@ class AuthService {
     }
   }
 
-
   Future<void> removeBookFromFavorites(String bookId) async {
     User? user = _auth.currentUser;
     if (user == null) {
@@ -456,7 +455,7 @@ class AuthService {
     }
   }
 
-  Future<List<Book>> getBooksFromReadingList() async {
+  Future<List<Book>> getReadingList() async {
     User? user = _auth.currentUser;
     if (user != null) {
       try {
@@ -478,6 +477,50 @@ class AuthService {
       throw Exception('No user is currently signed in.');
     }
   }
+
+  Future<bool> isBookInFavorites(String bookId) async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      try {
+        CollectionReference favoritesRef = _firestore
+            .collection('users')
+            .doc(user.uid)
+            .collection('favorites');
+        QuerySnapshot result = await favoritesRef
+            .where('id', isEqualTo: bookId)
+            .get();
+        return result.docs.isNotEmpty;
+      } catch (e) {
+        print('Error checking favorite status: $e');
+        return false;
+      }
+    } else {
+      throw Exception('No user is currently signed in.');
+    }
+  }
+
+  Future<bool> isBookInReadingList(String bookId) async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      try {
+        CollectionReference readingListRef = _firestore
+            .collection('users')
+            .doc(user.uid)
+            .collection('readingList');
+        QuerySnapshot result = await readingListRef
+            .where('id', isEqualTo: bookId)
+            .get();
+        return result.docs.isNotEmpty;
+      } catch (e) {
+        print('Error checking reading list status: $e');
+        return false;
+      }
+    } else {
+      throw Exception('No user is currently signed in.');
+    }
+  }
+
+
 
   User? get currentUser => _auth.currentUser;
 }
