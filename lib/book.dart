@@ -1,4 +1,5 @@
 class Book {
+  final String id;
   final String title;
   final String subtitle;
   final List<String> authors;
@@ -14,6 +15,7 @@ class Book {
   final String language;
 
   Book({
+    required this.id,
     required this.title,
     required this.subtitle,
     required this.authors,
@@ -29,23 +31,41 @@ class Book {
     required this.language,
   });
 
-  factory Book.fromJson(Map<String, dynamic> json) {
-    final volumeInfo = json['volumeInfo'] ?? {};
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'title': title,
+      'subtitle': subtitle,
+      'authors': authors,
+      'description': description,
+      'publisher': publisher,
+      'publishedDate': publishedDate,
+      'pageCount': pageCount,
+      'categories': categories,
+      'averageRating': averageRating,
+      'thumbnail': thumbnail,
+      'previewLink': previewLink,
+      'infoLink': infoLink,
+      'language': language,
+    };
+  }
 
+  factory Book.fromMap(Map<String, dynamic> json) {
     return Book(
-      title: volumeInfo['title'] ?? 'No Title',
-      subtitle: volumeInfo['subtitle'] ?? '',
-      authors: (volumeInfo['authors'] as List?)?.map((e) => e.toString()).toList() ?? ['Unknown'],
-      description: volumeInfo['description'] ?? '',
-      publisher: volumeInfo['publisher'] ?? '',
-      publishedDate: volumeInfo['publishedDate'] ?? '',
-      pageCount: volumeInfo['pageCount'] ?? 0,
-      categories: (volumeInfo['categories'] as List?)?.map((e) => e.toString()).toList() ?? [],
-      averageRating: (volumeInfo['averageRating'] ?? 0).toDouble(),
-      thumbnail: volumeInfo['imageLinks']?['thumbnail'] ?? '',
-      previewLink: volumeInfo['previewLink'] ?? '',
-      infoLink: volumeInfo['infoLink'] ?? '',
-      language: volumeInfo['language'] ?? '',
+      id: json['id'],
+      title: json['title'],
+      subtitle: json['subtitle'] ?? '',
+      authors: List<String>.from(json['authors'] ?? []),
+      description: json['description'] ?? '',
+      publisher: json['publisher'] ?? '',
+      publishedDate: json['publishedDate'] ?? '',
+      pageCount: json['pageCount'] ?? 0,
+      categories: List<String>.from(json['categories'] ?? []),
+      averageRating: json['averageRating']?.toDouble() ?? 0.0,
+      thumbnail: json['thumbnail'] ?? '',
+      previewLink: json['previewLink'] ?? '',
+      infoLink: json['infoLink'] ?? '',
+      language: json['language'] ?? '',
     );
   }
 }

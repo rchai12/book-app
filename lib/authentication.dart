@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'message.dart';
+import 'book.dart';
+import 'reading_status.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -294,6 +296,186 @@ class AuthService {
       print('Message deleted from message board.');
     } catch (e) {
       throw Exception('Error deleting message: $e');
+    }
+  }
+
+  Future<void> addBookToFavorites(Book book) async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      try {
+        CollectionReference favoritesRef = _firestore
+            .collection('users')
+            .doc(user.uid)
+            .collection('favorites');
+        QuerySnapshot existingBooks = await favoritesRef
+            .where('id', isEqualTo: book.id)
+            .get();
+        if (existingBooks.docs.isEmpty) {
+          await favoritesRef.add(book.toMap());
+          print('Book added to favorites.');
+        } else {
+          print('This book is already in the favorites.');
+        }
+      } catch (e) {
+        print('Error adding book to favorites: $e');
+        throw Exception('Failed to add book to favorites.');
+      }
+    } else {
+      throw Exception('No user is currently signed in.');
+    }
+  }
+
+
+  Future<void> removeBookFromFavorites(String bookId) async {
+    User? user = _auth.currentUser;
+    if (user == null) {
+      throw Exception('No user is currently signed in.');
+    }
+    try {
+      CollectionReference favoritesRef = _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('favorites');
+      QuerySnapshot querySnapshot = await favoritesRef
+          .where('id', isEqualTo: bookId)
+          .get();
+      if (querySnapshot.docs.isNotEmpty) {
+        for (var doc in querySnapshot.docs) {
+          await doc.reference.delete();
+        }
+        print('Book removed from favorites.');
+      } else {
+        print('Book not found in favorites.');
+      }
+    } catch (e) {
+      print('Error removing book from favorites: $e');
+      throw Exception('Failed to remove book from favorites.');
+    }
+  }
+
+  Future<List<Book>> getFavorites() async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      try {
+        CollectionReference favoritesRef = _firestore
+            .collection('users')
+            .doc(user.uid)
+            .collection('favorites');
+        QuerySnapshot querySnapshot = await favoritesRef.get();
+        List<Book> favoriteBooks = querySnapshot.docs.map((doc) {
+          var bookData = doc.data() as Map<String, dynamic>;
+          return Book.fromMap(bookData);
+        }).toList();
+        return favoriteBooks;
+      } catch (e) {
+        print('Error retrieving favorites: $e');
+        throw Exception('Failed to retrieve favorites.');
+      }
+    } else {
+      throw Exception('No user is currently signed in.');
+    }
+  }
+
+  Future<void> addBookToReadingList({
+    required Book book,
+    required ReadingStatus status,
+  }) async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      try {
+        CollectionReference readingListRef = _firestore
+            .collection('users')
+            .doc(user.uid)
+            .collection('readingList');
+        QuerySnapshot existingBooks = await readingListRef
+            .where('id', isEqualTo: book.id)
+            .get();
+        if (existingBooks.docs.isEmpty) {
+          var bookData = book.toMap();
+          bookData['status'] = status.toString().split('.').last;
+          await readingListRef.add(bookData);
+          print('Book added to reading list.');
+        } else {
+          print('This book is already in the reading list.');
+        }
+      } catch (e) {
+        print('Error adding book to reading list: $e');
+        throw Exception('Failed to add book to reading list.');
+      }
+    } else {
+      throw Exception('No user is currently signed in.');
+    }
+  }
+
+  Future<void> removeBookFromReadingList(String bookId) async {
+    User? user = _auth.currentUser;
+    if (user == null) throw Exception('No user is currently signed in.');
+    try {
+      QuerySnapshot<Map<String, dynamic>> snapshot = await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('readingList') 
+          .get();
+      final doc = snapshot.docs.firstWhere(
+        (doc) => doc.data()['id'] == bookId,
+        orElse: () => throw Exception('Book not found in reading list.'),
+      );
+      await doc.reference.delete();
+      print('Book removed from reading list.');
+    } catch (e) {
+      throw Exception('Error removing book from reading list: $e');
+    }
+  }
+
+  Future<void> changeReadingStatus(String bookId, ReadingStatus newStatus) async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      try {
+        CollectionReference readingListRef = _firestore
+            .collection('users')
+            .doc(user.uid)
+            .collection('readingList');
+        QuerySnapshot existingBooks = await readingListRef
+            .where('id', isEqualTo: bookId)
+            .get();
+        if (existingBooks.docs.isNotEmpty) {
+          var doc = existingBooks.docs.first;
+          await doc.reference.update({
+            'status': newStatus.toString().split('.').last,
+          });
+          print('Reading status updated for book.');
+        } else {
+          print('Book not found in reading list.');
+        }
+      } catch (e) {
+        print('Error changing reading status: $e');
+        throw Exception('Failed to change reading status.');
+      }
+    } else {
+      throw Exception('No user is currently signed in.');
+    }
+  }
+
+  Future<List<Book>> getBooksFromReadingList() async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      try {
+        CollectionReference readingListRef = _firestore
+            .collection('users')
+            .doc(user.uid)
+            .collection('readingList');
+        QuerySnapshot querySnapshot = await readingListRef.get();
+        List<Book> readingListBooks = querySnapshot.docs.map((doc) {
+          var bookData = doc.data() as Map<String, dynamic>;
+          return Book.fromMap(bookData);
+        }).toList();
+        return readingListBooks;
+      } catch (e) {
+        print('Error retrieving books from reading list: $e');
+        throw Exception('Failed to retrieve books from reading list.');
+      }
+    } else {
+      throw Exception('No user is currently signed in.');
     }
   }
 

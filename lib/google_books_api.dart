@@ -21,7 +21,7 @@ class GoogleBooksApi {
 
         if (items == null) return [];
 
-        return items.map((item) => Book.fromJson(item)).toList();
+        return items.map((item) => Book.fromMap(item)).toList();
       } else {
         throw Exception('Failed to fetch books. Status code: ${response.statusCode}');
       }
