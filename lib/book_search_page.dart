@@ -26,6 +26,13 @@ class _BookSearchPageState extends State<BookSearchPage> {
   Set<String> _favoriteIds = {};
   Set<String> _readingListIds = {};
 
+  @override
+  void initState() {
+    super.initState();
+    _controller.text = "bestsellers";
+    _search();
+  }
+
   void _search() async {
     setState(() => _loading = true);
     try {
