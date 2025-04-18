@@ -140,7 +140,7 @@ class _BookDetailsPageState extends State<BookDetailsPage> {
                 label: Text(_inReadingList ? 'Remove from Reading List' : 'Add to Reading List'),
               ),
             ),
-            /* If previewing becomes functional:
+            /* If previewing becomes functional, can't get it to work with in app web viewing:
             if (book.previewLink.isNotEmpty)
               ElevatedButton(
                 onPressed: () {

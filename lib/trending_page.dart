@@ -25,22 +25,49 @@ class _TrendingBooksPageState extends State<TrendingBooksPage> {
   bool _loading = false;
   Set<String> _favoriteIds = {};
   Set<String> _readingListIds = {};
+  int _startIndex = 0;
+  final int _maxResults = 10;
+  bool _hasMore = true;
+  bool _isFetchingMore = false;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     _fetchTrendingBooks();
   }
 
-  void _fetchTrendingBooks() async {
+  void _onScroll() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200 &&
+        !_isFetchingMore &&
+        _hasMore &&
+        !_loading) {
+      _fetchTrendingBooks(loadMore: true);
+    }
+  }
+
+  void _fetchTrendingBooks({bool loadMore = false}) async {
+    if (loadMore) _isFetchingMore = true;
     setState(() => _loading = true);
 
     try {
-      final results = await GoogleBooksApi.searchBooks('bestsellers OR trending OR new releases');
+       final results = await GoogleBooksApi.searchBooks(
+        'new+arrivals',
+        startIndex: _startIndex,
+        maxResults: _maxResults,
+        orderBy: 'relevance',
+      );
       final favorites = await widget.authService.getFavorites();
       final readingList = await widget.authService.getReadingList();
       setState(() {
-        _books = results;
+        if (loadMore) {
+          _books.addAll(results);
+        } else {
+          _books = results;
+        }
+        _startIndex += _maxResults;
+        _hasMore = results.length == _maxResults;
         _favoriteIds = favorites.map((book) => book.id).toSet();
         _readingListIds = readingList.map((book) => book.id).toSet();
       });
@@ -48,6 +75,7 @@ class _TrendingBooksPageState extends State<TrendingBooksPage> {
       print(e);
     } finally {
       setState(() => _loading = false);
+      _isFetchingMore = false;
     }
   }
 
@@ -115,100 +143,114 @@ class _TrendingBooksPageState extends State<TrendingBooksPage> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            _loading
-                ? CircularProgressIndicator()
-                : Expanded(
-                    child: GridView.builder(
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 16,
-                        mainAxisSpacing: 16,
-                        childAspectRatio: 0.6,
-                      ),
-                      itemCount: _books.length,
-                      itemBuilder: (context, index) {
-                        final book = _books[index];
-                        final isFavorite = _favoriteIds.contains(book.id);
-                        return Card(
-                          elevation: 5,
-                          child: InkWell(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => BookDetailsPage(
-                                    book: book,
-                                    user: widget.user,
-                                    authService: widget.authService,
-                                  ),
-                                ),
-                              );
-                            },
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (book.thumbnail.isNotEmpty)
-                                  Image.network(
-                                    book.thumbnail,
-                                    height: 140,
-                                    width: double.infinity,
-                                    fit: BoxFit.cover,
-                                  ),
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Text(
-                                    book.title,
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                                  child: Text(
-                                    book.authors.join(', '),
-                                    style: TextStyle(fontSize: 14, color: Colors.grey),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                Spacer(),
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      IconButton(
-                                        icon: Icon(
-                                          isFavorite ? Icons.favorite : Icons.favorite_border,
-                                          color: isFavorite ? Colors.red : null,
-                                        ),
-                                        onPressed: () => _toggleFavorite(book),
-                                      ),
-                                      IconButton(
-                                        icon: Icon(
-                                          _readingListIds.contains(book.id)
-                                              ? Icons.bookmark
-                                              : Icons.bookmark_outline,
-                                        ),
-                                        tooltip: _readingListIds.contains(book.id)
-                                            ? 'Already in Reading List'
-                                            : 'Read Later',
-                                        onPressed: () => _handleAddToReadingList(book),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
+            Expanded(
+              child: NotificationListener<ScrollNotification>(
+                onNotification: (scrollInfo) {
+                  if (!_loading &&
+                      _hasMore &&
+                      scrollInfo.metrics.pixels >= scrollInfo.metrics.maxScrollExtent - 200) {
+                    _fetchTrendingBooks(); // Load more
+                  }
+                  return false;
+                },
+                child: GridView.builder(
+                  controller: _scrollController,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: 0.6,
                   ),
+                  itemCount: _books.length + (_loading ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index == _books.length && _loading) {
+                      return Center(child: CircularProgressIndicator());
+                    }
+
+                    final book = _books[index];
+                    final isFavorite = _favoriteIds.contains(book.id);
+
+                    return Card(
+                      elevation: 5,
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => BookDetailsPage(
+                                book: book,
+                                user: widget.user,
+                                authService: widget.authService,
+                              ),
+                            ),
+                          );
+                        },
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (book.thumbnail.isNotEmpty)
+                              Image.network(
+                                book.thumbnail,
+                                height: 140,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                              ),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                book.title,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                              child: Text(
+                                book.authors.join(', '),
+                                style: TextStyle(fontSize: 14, color: Colors.grey),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Spacer(),
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  IconButton(
+                                    icon: Icon(
+                                      isFavorite ? Icons.favorite : Icons.favorite_border,
+                                      color: isFavorite ? Colors.red : null,
+                                    ),
+                                    onPressed: () => _toggleFavorite(book),
+                                  ),
+                                  IconButton(
+                                    icon: Icon(
+                                      _readingListIds.contains(book.id)
+                                          ? Icons.bookmark
+                                          : Icons.bookmark_outline,
+                                    ),
+                                    tooltip: _readingListIds.contains(book.id)
+                                        ? 'Already in Reading List'
+                                        : 'Read Later',
+                                    onPressed: () => _handleAddToReadingList(book),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
           ],
         ),
       ),

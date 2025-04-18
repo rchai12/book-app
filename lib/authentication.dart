@@ -520,7 +520,85 @@ class AuthService {
     }
   }
 
+  Future<void> updateUserFavoriteGenres(List<String> genresToSet) async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      try {
+        DocumentReference userRef = _firestore.collection('users').doc(user.uid);
+        await userRef.update({
+          'favorite genres': genresToSet,
+        });
+        print('User genres updated successfully.');
+      } catch (e) {
+        print('Error updating genres: $e');
+        throw Exception('Failed to update genres.');
+      }
+    } else {
+      throw Exception('No user is currently signed in.');
+    }
+  }
 
+  Future<List<String>> loadUserFavoriteGenres() async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      try {
+        DocumentReference userRef = _firestore.collection('users').doc(user.uid);
+        DocumentSnapshot userDoc = await userRef.get();
+        if (userDoc.exists) {
+          List<dynamic> genresData = userDoc['favorite genres'] ?? [];
+          List<String> genres = genresData.map((genre) => genre.toString()).toList();
+          return genres;
+        } else {
+          return [];
+        }
+      } catch (e) {
+        print('Error loading user genres: $e');
+        throw Exception('Failed to load user genres.');
+      }
+    } else {
+      throw Exception('No user is currently signed in.');
+    }
+  }
+
+  Future<void> updateUserDislikedGenres(List<String> genresToSet) async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      try {
+        DocumentReference userRef = _firestore.collection('users').doc(user.uid);
+        await userRef.update({
+          'disliked genres': genresToSet,
+        });
+        print('User genres updated successfully.');
+      } catch (e) {
+        print('Error updating genres: $e');
+        throw Exception('Failed to update genres.');
+      }
+    } else {
+      throw Exception('No user is currently signed in.');
+    }
+  }
+
+  Future<List<String>> loadUserDislikedGenres() async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      try {
+        DocumentReference userRef = _firestore.collection('users').doc(user.uid);
+        DocumentSnapshot userDoc = await userRef.get();
+        if (userDoc.exists) {
+          List<dynamic> genresData = userDoc['disliked genres'] ?? [];
+          List<String> genres = genresData.map((genre) => genre.toString()).toList();
+          return genres;
+        } else {
+          return [];
+        }
+      } catch (e) {
+        print('Error loading user genres: $e');
+        throw Exception('Failed to load user genres.');
+      }
+    } else {
+      throw Exception('No user is currently signed in.');
+    }
+  }
 
   User? get currentUser => _auth.currentUser;
 }

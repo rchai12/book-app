@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'authentication.dart';
 import 'package:intl/intl.dart';
 import 'message_history.dart';
+import 'favorite_book_genres.dart';
+import 'disliked_book_genres.dart';
 
 class ProfilePage extends StatefulWidget {
   User user;
@@ -198,6 +200,26 @@ class _ProfilePageState extends State<ProfilePage> {
                 );
               },
               child: const Text('Message History'),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => FavoriteBookGenresPage(user: widget.user, authService: widget.authService)),
+                );
+              },
+              child: const Text('Favorite Book Genres'),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => DislikedBookGenresPage(user: widget.user, authService: widget.authService)),
+                );
+              },
+              child: const Text('Disliked Book Genres'),
             ),
             const SizedBox(height: 16),
             ElevatedButton(

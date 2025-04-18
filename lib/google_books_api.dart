@@ -4,12 +4,18 @@ import 'book.dart';
 
 class GoogleBooksApi {
   static const _baseUrl = 'www.googleapis.com';
+  static const _apiKey = 'AIzaSyCvP8UF-CE64MgHS9pJdhPXEbwvUwAUO84';
 
-  static Future<List<Book>> searchBooks(String query) async {
+  static Future<List<Book>> searchBooks(String query, {int startIndex = 0, int maxResults = 10, String? orderBy,}) async {
     final uri = Uri.https(
       _baseUrl,
       '/books/v1/volumes',
-      {'q': query, 'key': 'AIzaSyCvP8UF-CE64MgHS9pJdhPXEbwvUwAUO84'},
+      {
+        'q': query,
+        'startIndex': startIndex.toString(),
+        'maxResults': maxResults.toString(),
+        'key': _apiKey,
+      },
     );
 
     try {
