@@ -303,22 +303,25 @@ class AuthService {
     User? user = _auth.currentUser;
     if (user != null) {
       try {
-        CollectionReference favoritesRef = _firestore
+        DocumentReference bookDocRef = _firestore
             .collection('users')
             .doc(user.uid)
-            .collection('favorites');
-        QuerySnapshot existingBooks = await favoritesRef
-            .where('id', isEqualTo: book.id)
-            .get();
-        if (existingBooks.docs.isEmpty) {
-          await favoritesRef.add(book.toMap());
-          print('Book added to favorites.');
+            .collection('books')
+            .doc(book.id);
+        DocumentSnapshot docSnapshot = await bookDocRef.get();
+        if (docSnapshot.exists) {
+          await bookDocRef.update({'favorite': true});
+          print('Book marked as favorite.');
         } else {
-          print('This book is already in the favorites.');
+          await bookDocRef.set({
+            'id': book.id,
+            'favorite': true,
+          });
+          print('Book added with favorite = true.');
         }
       } catch (e) {
         print('Error adding book to favorites: $e');
-        throw Exception('Failed to add book to favorites.');
+        throw Exception('Failed to update favorite status.');
       }
     } else {
       throw Exception('No user is currently signed in.');
@@ -331,120 +334,143 @@ class AuthService {
       throw Exception('No user is currently signed in.');
     }
     try {
-      CollectionReference favoritesRef = _firestore
+      DocumentReference bookDocRef = _firestore
           .collection('users')
           .doc(user.uid)
-          .collection('favorites');
-      QuerySnapshot querySnapshot = await favoritesRef
-          .where('id', isEqualTo: bookId)
-          .get();
-      if (querySnapshot.docs.isNotEmpty) {
-        for (var doc in querySnapshot.docs) {
-          await doc.reference.delete();
+          .collection('books')
+          .doc(bookId);
+      DocumentSnapshot docSnapshot = await bookDocRef.get();
+      if (docSnapshot.exists) {
+        var data = docSnapshot.data() as Map<String, dynamic>;
+        bool isReadingList = data['reading_list'] ?? false;
+        bool isReviewed = data['reviewed'] ?? false;
+        if (!isReadingList && !isReviewed) {
+          await bookDocRef.delete();
+          print('Book removed entirely from user collection.');
+        } else {
+          await bookDocRef.update({'favorite': false});
+          print('Book favorite status set to false.');
         }
-        print('Book removed from favorites.');
       } else {
-        print('Book not found in favorites.');
+        print('Book not found in user\'s books collection.');
       }
     } catch (e) {
-      print('Error removing book from favorites: $e');
-      throw Exception('Failed to remove book from favorites.');
+      print('Error updating favorite status: $e');
+      throw Exception('Failed to update favorite status.');
     }
   }
 
-  Future<List<Book>> getFavorites() async {
+
+
+  Future<List<String>> getFavorites() async {
     User? user = _auth.currentUser;
-    if (user != null) {
-      try {
-        CollectionReference favoritesRef = _firestore
-            .collection('users')
-            .doc(user.uid)
-            .collection('favorites');
-        QuerySnapshot querySnapshot = await favoritesRef.get();
-        List<Book> favoriteBooks = querySnapshot.docs.map((doc) {
-          var bookData = doc.data() as Map<String, dynamic>;
-          return Book.fromFirestore(bookData);
-        }).toList();
-        return favoriteBooks;
-      } catch (e) {
-        print('Error retrieving favorites: $e');
-        throw Exception('Failed to retrieve favorites.');
-      }
-    } else {
+    if (user == null) {
       throw Exception('No user is currently signed in.');
     }
+    try {
+      CollectionReference booksRef = _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('books');
+      QuerySnapshot querySnapshot = await booksRef
+          .where('favorite', isEqualTo: true)
+          .get();
+      List<String> favoriteBookIds = querySnapshot.docs.map((doc) {
+        var data = doc.data() as Map<String, dynamic>;
+        return data['id'] as String;
+      }).toList();
+      return favoriteBookIds;
+    } catch (e) {
+      print('Error retrieving favorites: $e');
+      throw Exception('Failed to retrieve favorites.');
+    }
   }
+
 
   Future<void> addBookToReadingList({
     required Book book,
     required ReadingStatus status,
   }) async {
     User? user = _auth.currentUser;
-    if (user != null) {
-      try {
-        CollectionReference readingListRef = _firestore
-            .collection('users')
-            .doc(user.uid)
-            .collection('readingList');
-        QuerySnapshot existingBooks = await readingListRef
-            .where('id', isEqualTo: book.id)
-            .get();
-        if (existingBooks.docs.isEmpty) {
-          var bookData = book.toMap();
-          bookData['status'] = status.toString().split('.').last;
-          await readingListRef.add(bookData);
-          print('Book added to reading list.');
-        } else {
-          print('This book is already in the reading list.');
-        }
-      } catch (e) {
-        print('Error adding book to reading list: $e');
-        throw Exception('Failed to add book to reading list.');
-      }
-    } else {
+    if (user == null) {
       throw Exception('No user is currently signed in.');
     }
+    try {
+      DocumentReference bookDocRef = _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('books')
+          .doc(book.id); 
+      DocumentSnapshot docSnapshot = await bookDocRef.get();
+      String statusString = status.toString().split('.').last;
+      if (docSnapshot.exists) {
+        await bookDocRef.update({
+          'reading_list': true,
+          'reading_status': statusString,
+        });
+        print('Book updated in reading list with status: $statusString.');
+      } else {
+        await bookDocRef.set({
+          'id': book.id,
+          'reading_list': true,
+          'reading_status': statusString,
+        });
+        print('Book added to reading list with status: $statusString.');
+      }
+    } catch (e) {
+      print('Error updating reading list: $e');
+      throw Exception('Failed to update reading list.');
+    }
   }
+
 
   Future<void> removeBookFromReadingList(String bookId) async {
     User? user = _auth.currentUser;
     if (user == null) throw Exception('No user is currently signed in.');
     try {
-      QuerySnapshot<Map<String, dynamic>> snapshot = await _firestore
+      DocumentReference bookDocRef = _firestore
           .collection('users')
           .doc(user.uid)
-          .collection('readingList') 
-          .get();
-      final doc = snapshot.docs.firstWhere(
-        (doc) => doc.data()['id'] == bookId,
-        orElse: () => throw Exception('Book not found in reading list.'),
-      );
-      await doc.reference.delete();
-      print('Book removed from reading list.');
+          .collection('books')
+          .doc(bookId);
+      DocumentSnapshot docSnapshot = await bookDocRef.get();
+      if (docSnapshot.exists) {
+        var data = docSnapshot.data() as Map<String, dynamic>;
+        bool isFavorite = data['favorite'] ?? false;
+        bool isReviewed = data['reviewed'] ?? false;
+        if (!isFavorite && !isReviewed) {
+          await bookDocRef.delete();
+          print('Book removed entirely from user collection.');
+        } else {
+          await bookDocRef.update({'reading_list': false});
+          print('Book removed from reading list, kept in collection.');
+        }
+      } else {
+        throw Exception('Book not found in user\'s books collection.');
+      }
     } catch (e) {
       throw Exception('Error removing book from reading list: $e');
     }
   }
 
+
   Future<void> changeReadingStatus(String bookId, ReadingStatus newStatus) async {
     User? user = _auth.currentUser;
     if (user != null) {
       try {
-        CollectionReference readingListRef = _firestore
+        DocumentReference bookDocRef = _firestore
             .collection('users')
             .doc(user.uid)
-            .collection('readingList');
-        QuerySnapshot existingBooks = await readingListRef
-            .where('id', isEqualTo: bookId)
-            .get();
-        if (existingBooks.docs.isNotEmpty) {
-          var doc = existingBooks.docs.first;
-          await doc.reference.update({
-            'status': newStatus.toString().split('.').last,
+            .collection('books')
+            .doc(bookId);
+        DocumentSnapshot docSnapshot = await bookDocRef.get();
+        if (docSnapshot.exists) {
+          await bookDocRef.update({
+            'reading_status': newStatus.toString().split('.').last,
           });
           print('Reading status updated for book.');
         } else {
-          print('Book not found in reading list.');
+          print('Book not found in user\'s books collection.');
         }
       } catch (e) {
         print('Error changing reading status: $e');
@@ -455,20 +481,24 @@ class AuthService {
     }
   }
 
-  Future<List<Book>> getReadingList() async {
+
+  Future<List<Map<String, dynamic>>> getReadingList() async {
     User? user = _auth.currentUser;
     if (user != null) {
       try {
-        CollectionReference readingListRef = _firestore
+        CollectionReference booksRef = _firestore
             .collection('users')
             .doc(user.uid)
-            .collection('readingList');
-        QuerySnapshot querySnapshot = await readingListRef.get();
-        List<Book> readingListBooks = querySnapshot.docs.map((doc) {
-          var bookData = doc.data() as Map<String, dynamic>;
-          return Book.fromFirestore(bookData);
+            .collection('books');
+        QuerySnapshot querySnapshot = await booksRef.where('reading_list', isEqualTo: true).get();
+        List<Map<String, dynamic>> readingList = querySnapshot.docs.map((doc) {
+          var data = doc.data() as Map<String, dynamic>;
+          return {
+            'id': data['id'],
+            'reading_status': data['reading_status'] ?? 'unknown',
+          };
         }).toList();
-        return readingListBooks;
+        return readingList;
       } catch (e) {
         print('Error retrieving books from reading list: $e');
         throw Exception('Failed to retrieve books from reading list.');
@@ -478,18 +508,24 @@ class AuthService {
     }
   }
 
+
   Future<bool> isBookInFavorites(String bookId) async {
     User? user = _auth.currentUser;
     if (user != null) {
       try {
-        CollectionReference favoritesRef = _firestore
+        DocumentReference bookDocRef = _firestore
             .collection('users')
             .doc(user.uid)
-            .collection('favorites');
-        QuerySnapshot result = await favoritesRef
-            .where('id', isEqualTo: bookId)
-            .get();
-        return result.docs.isNotEmpty;
+            .collection('books')
+            .doc(bookId);
+        DocumentSnapshot docSnapshot = await bookDocRef.get();
+        if (docSnapshot.exists) {
+          var data = docSnapshot.data() as Map<String, dynamic>;
+          bool isFavorite = data['favorite'] == true;
+          return isFavorite;
+        } else {
+          return false;
+        }
       } catch (e) {
         print('Error checking favorite status: $e');
         return false;
@@ -499,18 +535,24 @@ class AuthService {
     }
   }
 
+
   Future<bool> isBookInReadingList(String bookId) async {
     User? user = _auth.currentUser;
     if (user != null) {
       try {
-        CollectionReference readingListRef = _firestore
+        DocumentReference bookDocRef = _firestore
             .collection('users')
             .doc(user.uid)
-            .collection('readingList');
-        QuerySnapshot result = await readingListRef
-            .where('id', isEqualTo: bookId)
-            .get();
-        return result.docs.isNotEmpty;
+            .collection('books')
+            .doc(bookId);
+        DocumentSnapshot docSnapshot = await bookDocRef.get();
+        if (docSnapshot.exists) {
+          var data = docSnapshot.data() as Map<String, dynamic>;
+          bool isInReadingList = data['reading_list'] == true;
+          return isInReadingList;
+        } else {
+          return false;
+        }
       } catch (e) {
         print('Error checking reading list status: $e');
         return false;
@@ -604,27 +646,21 @@ class AuthService {
     User? user = _auth.currentUser;
     if (user != null) {
       try {
-        CollectionReference reviewsRef = _firestore
+        DocumentReference bookDocRef = _firestore
             .collection('users')
             .doc(user.uid)
-            .collection('reviews');
-
-        QuerySnapshot existingReviews = await reviewsRef
-            .where('bookId', isEqualTo: book.id)
-            .get();
-
-        Map<String, dynamic> reviewData = book.toMap();
-        reviewData['rating'] = rating;
-        reviewData['review'] = reviewText;
-        reviewData['timestamp'] = FieldValue.serverTimestamp();
-
-        if (existingReviews.docs.isEmpty) {
-          await reviewsRef.add(reviewData);
-          print('Book review added successfully.');
+            .collection('books')
+            .doc(book.id);
+        DocumentSnapshot docSnapshot = await bookDocRef.get();
+        if (docSnapshot.exists) {
+          await bookDocRef.update({
+            'reviewed': true,
+            'rating': rating,
+            'review': reviewText,
+          });
+          print('Book review added or updated successfully.');
         } else {
-          var reviewDoc = existingReviews.docs.first;
-          await reviewDoc.reference.update(reviewData);
-          print('Book review updated successfully.');
+          print('Book not found in user\'s collection.');
         }
       } catch (e) {
         print('Error adding/updating review: $e');
@@ -635,19 +671,24 @@ class AuthService {
     }
   }
 
-
-  Future<List<Book>> getReviews() async {
+  Future<List<Map<String, dynamic>>> getReviews() async {
     User? user = _auth.currentUser;
     if (user != null) {
       try {
-        CollectionReference reviewsRef = _firestore
+        CollectionReference booksRef = _firestore
             .collection('users')
             .doc(user.uid)
-            .collection('reviews');
-        QuerySnapshot querySnapshot = await reviewsRef.get();
-        List<Book> reviewedBooks = querySnapshot.docs.map((doc) {
-          var reviewData = doc.data() as Map<String, dynamic>;
-          return Book.fromFirestore(reviewData);
+            .collection('books');
+        QuerySnapshot querySnapshot = await booksRef
+            .where('reviewed', isEqualTo: true)
+            .get();
+        List<Map<String, dynamic>> reviewedBooks = querySnapshot.docs.map((doc) {
+          var bookData = doc.data() as Map<String, dynamic>;
+          return {
+            'id': doc.id, 
+            'rating': bookData['rating'],
+            'review': bookData['review'],
+          };
         }).toList();
         return reviewedBooks;
       } catch (e) {
@@ -659,20 +700,27 @@ class AuthService {
     }
   }
 
+
   Future<Map<String, dynamic>?> getBookReview(String bookId) async {
     User? user = _auth.currentUser;
     if (user != null) {
       try {
-        CollectionReference reviewsRef = _firestore
+        DocumentReference reviewsRef = _firestore
             .collection('users')
             .doc(user.uid)
-            .collection('reviews');
-        QuerySnapshot reviewsSnapshot = await reviewsRef
-            .where('id', isEqualTo: bookId)
-            .get();
-        if (reviewsSnapshot.docs.isNotEmpty) {
-          return reviewsSnapshot.docs.first.data() as Map<String, dynamic>;
+            .collection('books')
+            .doc(bookId);
+        DocumentSnapshot docSnapshot = await reviewsRef.get();
+        if (docSnapshot.exists) {
+          var data = docSnapshot.data() as Map<String, dynamic>;
+          if (data['reviewed'] == true) {
+            return {
+              'rating': data['rating'],
+              'review': data['review'],
+            };
+          }
         }
+        return null;
       } catch (e) {
         print('Error retrieving book review: $e');
       }

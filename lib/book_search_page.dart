@@ -23,8 +23,8 @@ class _BookSearchPageState extends State<BookSearchPage> {
   final TextEditingController _controller = TextEditingController();
   List<Book> _books = [];
   bool _loading = false;
-  Set<String> _favoriteIds = {};
-  Set<String> _readingListIds = {};
+  List<String> _favoriteIds = [];
+  List<Map<String, dynamic>> _readingListIds = [];
   int _startIndex = 0;
   final int _maxResults = 10;
   bool _hasMore = true;
@@ -58,22 +58,18 @@ class _BookSearchPageState extends State<BookSearchPage> {
         _startIndex = 0;
         _hasMore = true;
       }
-
       final results = await GoogleBooksApi.searchBooks(
         _controller.text,
         startIndex: _startIndex,
         maxResults: _maxResults,
       );
-
       if (results.length < _maxResults && results.isNotEmpty) {
         _startIndex += results.length;
       } else {
         _startIndex += _maxResults;
       }
-
-      final favorites = await widget.authService.getFavorites();
-      final readingList = await widget.authService.getReadingList();
-
+      _favoriteIds = await widget.authService.getFavorites();
+      _readingListIds = await widget.authService.getReadingList();
       setState(() {
         if (isNewSearch) {
           _books = results;
@@ -82,10 +78,6 @@ class _BookSearchPageState extends State<BookSearchPage> {
           final newBooks = results.where((b) => !existingIds.contains(b.id)).toList();
           _books.addAll(newBooks);
         }
-
-        _favoriteIds = favorites.map((book) => book.id).toSet();
-        _readingListIds = readingList.map((book) => book.id).toSet();
-
         if (results.length < _maxResults) _hasMore = false;
         _startIndex += _maxResults;
       });
@@ -126,7 +118,7 @@ class _BookSearchPageState extends State<BookSearchPage> {
     if (_readingListIds.contains(book.id)) {
       await widget.authService.removeBookFromReadingList(book.id);
       setState(() {
-        _readingListIds.remove(book.id);
+        _readingListIds.remove(_readingListIds.);
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -140,7 +132,7 @@ class _BookSearchPageState extends State<BookSearchPage> {
         status: ReadingStatus.wantToRead,
       );
       setState(() {
-        _readingListIds.add(book.id);
+        _readingListIds.add({'id' : book.id, 'reading_status': ReadingStatus.wantToRead});
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
