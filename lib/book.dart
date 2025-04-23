@@ -1,3 +1,5 @@
+import 'reading_status.dart';
+
 class Book {
   final String id;
   final String title;
@@ -13,6 +15,9 @@ class Book {
   final String previewLink;
   final String infoLink;
   final String language;
+  final ReadingStatus? readingStatus;
+  String? review;
+  int? rating;
 
   Book({
     required this.id,
@@ -29,6 +34,9 @@ class Book {
     required this.previewLink,
     required this.infoLink,
     required this.language,
+    this.readingStatus,
+    this.review,
+    this.rating,
   });
 
   Map<String, dynamic> toMap() {
@@ -47,6 +55,9 @@ class Book {
       'previewLink': previewLink,
       'infoLink': infoLink,
       'language': language,
+      'readingStatus': readingStatus?.name,
+      'review': review,
+      'rating': rating,
     };
   }
 
@@ -71,6 +82,14 @@ class Book {
       previewLink: volumeInfo['previewLink'] ?? '',
       infoLink: volumeInfo['infoLink'] ?? '',
       language: volumeInfo['language'] ?? '',
+      readingStatus: json['status'] != null
+          ? ReadingStatus.values.firstWhere(
+              (e) => e.name == json['status'],
+              orElse: () => ReadingStatus.wantToRead,
+            )
+          : null,
+      review: json['review'],
+      rating: json['rating'],
     );
   }
 
@@ -90,6 +109,14 @@ class Book {
       previewLink: data['previewLink'] ?? '',
       infoLink: data['infoLink'] ?? '',
       language: data['language'] ?? '',
+      readingStatus: data['status'] != null
+        ? ReadingStatus.values.firstWhere(
+            (e) => e.name == data['status'],
+            orElse: () => ReadingStatus.wantToRead,
+          )
+        : null,
+      review: data['review'],
+      rating: data['rating'],
     );
   }
 }

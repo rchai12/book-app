@@ -8,7 +8,7 @@ class MessageBoardsPage extends StatefulWidget {
   final User user;
   final AuthService authService;
 
-  MessageBoardsPage({
+  const MessageBoardsPage({
     super.key,
     required this.user,
     required this.authService,
@@ -47,8 +47,8 @@ class _MessageBoardsPageState extends State<MessageBoardsPage> {
   }
 
   void _showCreateMessageBoardDialog() {
-    final _titleController = TextEditingController();
-    final _imageUrlController = TextEditingController();
+    final titleController = TextEditingController();
+    final imageUrlController = TextEditingController();
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -57,11 +57,11 @@ class _MessageBoardsPageState extends State<MessageBoardsPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
-              controller: _titleController,
+              controller: titleController,
               decoration: InputDecoration(labelText: 'Title'),
             ),
             TextField(
-              controller: _imageUrlController,
+              controller: imageUrlController,
               decoration: InputDecoration(labelText: 'Image URL'),
             ),
           ],
@@ -73,8 +73,8 @@ class _MessageBoardsPageState extends State<MessageBoardsPage> {
           ),
           ElevatedButton(
             onPressed: () async {
-              String title = _titleController.text.trim();
-              String imageUrl = _imageUrlController.text.trim();
+              String title = titleController.text.trim();
+              String imageUrl = imageUrlController.text.trim();
               String userId = widget.user.uid;
               if (title.isNotEmpty && imageUrl.isNotEmpty) {
                 try {

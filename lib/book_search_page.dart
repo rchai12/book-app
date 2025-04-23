@@ -156,7 +156,7 @@ class _BookSearchPageState extends State<BookSearchPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: Container(
+        title: SizedBox(
           height: 40,
           child: TextField(
             controller: _controller,

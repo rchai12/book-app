@@ -27,7 +27,7 @@ class MessageBoardPage extends StatefulWidget {
 class _MessageBoardPageState extends State<MessageBoardPage> {
   late Future<List<Message>> _messagesFuture;
   late bool _isAdmin = false;
-  TextEditingController _messageController = TextEditingController();
+  final TextEditingController _messageController = TextEditingController();
 
   @override
   void initState() {

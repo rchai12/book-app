@@ -11,11 +11,11 @@ class BookDetailsPage extends StatefulWidget {
   final AuthService authService;
 
   const BookDetailsPage({
-    Key? key,
+    super.key,
     required this.book,
     required this.user,
     required this.authService,
-  }) : super(key: key);
+  });
 
   @override
   State<BookDetailsPage> createState() => _BookDetailsPageState();
@@ -24,12 +24,16 @@ class BookDetailsPage extends StatefulWidget {
 class _BookDetailsPageState extends State<BookDetailsPage> {
   bool _isFavorited = false;
   bool _inReadingList = false;
+  int _userRating = 0;
+  String _userReview = '';
+  final _reviewController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _checkFavoriteStatus();
     _checkReadingListStatus();
+    _checkBookReview();
   }
 
   Future<void> _checkFavoriteStatus() async {
@@ -44,6 +48,31 @@ class _BookDetailsPageState extends State<BookDetailsPage> {
     setState(() {
       _inReadingList = isInList;
     });
+  }
+
+  void _checkBookReview() async {
+    try {
+      print('Checking if has review');
+      final reviewData = await widget.authService.getBookReview(widget.book.id);
+      if (reviewData != null) {
+        setState(() {
+          _userRating = reviewData['rating'];
+          _userReview = reviewData['review'];
+          widget.book.rating = _userRating;
+          widget.book.review = _userReview;
+          print('Review: ${_userReview}');
+          print ('Rating: ${_userRating}');
+        });
+      }
+    } catch (e) {
+      print('Error checking book review: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to retrieve review. Please try again later.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   void _toggleFavorite() async {
@@ -82,6 +111,47 @@ class _BookDetailsPageState extends State<BookDetailsPage> {
     }
   }
 
+  void _submitReview() async {
+    try {
+      await widget.authService.addBookToReviews(widget.book, _userRating, _userReview,);
+      setState(() {
+        widget.book.review = _userReview;
+        widget.book.rating = _userRating;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Review added successfully!'),
+          duration: Duration(seconds: 1),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to submit review. Please try again.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  Widget _buildRatingStars() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: List.generate(5, (index) {
+        return IconButton(
+          icon: Icon(
+            index < _userRating ? Icons.star : Icons.star_border,
+            color: Colors.amber,
+          ),
+          onPressed: () {
+            setState(() {
+              _userRating = index + 1;
+            });
+          },
+        );
+      }),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -124,10 +194,10 @@ class _BookDetailsPageState extends State<BookDetailsPage> {
             Text('By: ${book.authors.join(', ')}', style: TextStyle(fontSize: 16)),
             if (book.publisher.isNotEmpty) Text('Publisher: ${book.publisher}', style: TextStyle(fontSize: 16)),
             if (book.publishedDate.isNotEmpty) Text('Published: ${book.publishedDate}', style: TextStyle(fontSize: 16)),
-            if (book.pageCount != null) Text('Pages: ${book.pageCount}', style: TextStyle(fontSize: 16)),
+            Text('Pages: ${book.pageCount}', style: TextStyle(fontSize: 16)),
             if (book.categories.isNotEmpty)
               Text('Categories: ${book.categories.join(', ')}', style: TextStyle(fontSize: 16)),
-            if (book.averageRating != null) Text('Rating: ${book.averageRating} ⭐', style: TextStyle(fontSize: 16)),
+            Text('Rating: ${book.averageRating} ⭐', style: TextStyle(fontSize: 16)),
             SizedBox(height: 20),
             Text('Description', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             SizedBox(height: 8),
@@ -139,6 +209,44 @@ class _BookDetailsPageState extends State<BookDetailsPage> {
                 icon: Icon(_inReadingList ? Icons.bookmark : Icons.bookmark_border),
                 label: Text(_inReadingList ? 'Remove from Reading List' : 'Add to Reading List'),
               ),
+            ),
+            if (_userReview.isNotEmpty && _userRating > 0)
+              Padding(
+                padding: const EdgeInsets.only(top: 20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Your Review:', style: TextStyle(fontWeight: FontWeight.bold)),
+                    SizedBox(height: 8),
+                    Text(_userReview),
+                    SizedBox(height: 10),
+                    Text('Your Rating: $_userRating/5 stars'),
+                  ],
+                ),
+              ),
+            SizedBox(height: 30),
+            Text('Rate this book:', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            SizedBox(height: 10),
+            _buildRatingStars(),
+            Text('Add a Review', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            SizedBox(height: 10),
+            TextField(
+              controller: _reviewController,
+              decoration: InputDecoration(
+                hintText: 'Write your review here...',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 5,
+              onChanged: (value) {
+                setState(() {
+                  _userReview = value;
+                });
+              },
+            ),
+            SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: _submitReview,
+              child: Text('Submit Review'),
             ),
             /* If previewing becomes functional, can't get it to work with in app web viewing:
             if (book.previewLink.isNotEmpty)

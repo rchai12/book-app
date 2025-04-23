@@ -4,7 +4,7 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 class PreviewPage extends StatelessWidget {
   final String previewUrl;
 
-  const PreviewPage({Key? key, required this.previewUrl}) : super(key: key);
+  const PreviewPage({super.key, required this.previewUrl});
 
   @override
   Widget build(BuildContext context) {

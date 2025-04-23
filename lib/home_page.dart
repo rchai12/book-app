@@ -1,7 +1,6 @@
 import 'package:bookapp/message_boards_page.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'authentication.dart';
 import 'account_page.dart';
 import 'profile_page.dart';

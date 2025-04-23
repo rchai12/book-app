@@ -10,13 +10,13 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  await WebViewPlatform.instance;
-  await InAppWebViewPlatform.instance;
+  WebViewPlatform.instance;
+  InAppWebViewPlatform.instance;
   runApp(BookApp());
 }
 
 class BookApp extends StatelessWidget {
-  BookApp({super.key});
+  const BookApp({super.key});
 
   @override
   Widget build(BuildContext context) {

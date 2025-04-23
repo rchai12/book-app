@@ -7,10 +7,10 @@ class DislikedBookGenresPage extends StatefulWidget {
   AuthService authService;
 
   DislikedBookGenresPage({
-    Key? key,
+    super.key,
     required this.user,
     required this.authService,
-  }) : super(key: key);
+  });
 
   @override
   _DislikedBookGenresPageState createState() => _DislikedBookGenresPageState();
@@ -30,7 +30,7 @@ class _DislikedBookGenresPageState extends State<DislikedBookGenresPage> {
   ];
 
   List<String> _selectedGenres = [];
-  String _question = 'What are your most disliked book genres?';
+  final String _question = 'What are your most disliked book genres?';
 
   @override
   void initState() {
@@ -79,7 +79,7 @@ class _DislikedBookGenresPageState extends State<DislikedBookGenresPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('What are your most disliked Genres?!'),
+        title: Text('Disliked Genres?!'),
         backgroundColor: Colors.blue,
       ),
       body: SingleChildScrollView(

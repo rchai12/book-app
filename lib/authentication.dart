@@ -600,5 +600,85 @@ class AuthService {
     }
   }
 
+  Future<void> addBookToReviews(Book book, int rating, String reviewText) async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      try {
+        CollectionReference reviewsRef = _firestore
+            .collection('users')
+            .doc(user.uid)
+            .collection('reviews');
+
+        QuerySnapshot existingReviews = await reviewsRef
+            .where('bookId', isEqualTo: book.id)
+            .get();
+
+        Map<String, dynamic> reviewData = book.toMap();
+        reviewData['rating'] = rating;
+        reviewData['review'] = reviewText;
+        reviewData['timestamp'] = FieldValue.serverTimestamp();
+
+        if (existingReviews.docs.isEmpty) {
+          await reviewsRef.add(reviewData);
+          print('Book review added successfully.');
+        } else {
+          var reviewDoc = existingReviews.docs.first;
+          await reviewDoc.reference.update(reviewData);
+          print('Book review updated successfully.');
+        }
+      } catch (e) {
+        print('Error adding/updating review: $e');
+        throw Exception('Failed to add/update book review.');
+      }
+    } else {
+      throw Exception('No user is currently signed in.');
+    }
+  }
+
+
+  Future<List<Book>> getReviews() async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      try {
+        CollectionReference reviewsRef = _firestore
+            .collection('users')
+            .doc(user.uid)
+            .collection('reviews');
+        QuerySnapshot querySnapshot = await reviewsRef.get();
+        List<Book> reviewedBooks = querySnapshot.docs.map((doc) {
+          var reviewData = doc.data() as Map<String, dynamic>;
+          return Book.fromFirestore(reviewData);
+        }).toList();
+        return reviewedBooks;
+      } catch (e) {
+        print('Error retrieving reviews: $e');
+        throw Exception('Failed to retrieve reviews.');
+      }
+    } else {
+      throw Exception('No user is currently signed in.');
+    }
+  }
+
+  Future<Map<String, dynamic>?> getBookReview(String bookId) async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      try {
+        CollectionReference reviewsRef = _firestore
+            .collection('users')
+            .doc(user.uid)
+            .collection('reviews');
+        QuerySnapshot reviewsSnapshot = await reviewsRef
+            .where('id', isEqualTo: bookId)
+            .get();
+        if (reviewsSnapshot.docs.isNotEmpty) {
+          return reviewsSnapshot.docs.first.data() as Map<String, dynamic>;
+        }
+      } catch (e) {
+        print('Error retrieving book review: $e');
+      }
+    }
+    return null;
+  }
+
   User? get currentUser => _auth.currentUser;
 }

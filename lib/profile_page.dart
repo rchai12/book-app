@@ -124,9 +124,6 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     final formattedDob = _dob != null ? DateFormat.yMMMd().format(_dob!) : 'Not set';
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ListView(

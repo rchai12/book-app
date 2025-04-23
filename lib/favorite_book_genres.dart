@@ -7,10 +7,10 @@ class FavoriteBookGenresPage extends StatefulWidget {
   AuthService authService;
 
   FavoriteBookGenresPage({
-    Key? key,
+    super.key,
     required this.user,
     required this.authService,
-  }) : super(key: key);
+  });
 
   @override
   _FavoriteBookGenresPageState createState() => _FavoriteBookGenresPageState();
@@ -30,7 +30,7 @@ class _FavoriteBookGenresPageState extends State<FavoriteBookGenresPage> {
   ];
 
   List<String> _selectedGenres = [];
-  String _question = 'What are your favorite book genres?';
+  final String _question = 'What are your favorite book genres?';
 
   @override
   void initState() {
@@ -79,7 +79,7 @@ class _FavoriteBookGenresPageState extends State<FavoriteBookGenresPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('What are your Favorite Genres?!'),
+        title: Text('Favorite Genres?!'),
         backgroundColor: Colors.blue,
       ),
       body: SingleChildScrollView(
