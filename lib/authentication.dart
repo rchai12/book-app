@@ -27,7 +27,7 @@ class AuthService {
           'email': email,
           'date_of_birth': Timestamp.fromDate(dateOfBirth),
           'created_at': Timestamp.now(),
-          'role' : 'user'
+          'role' : 'admin'
         });
         await user.updateDisplayName(name);
         await user.reload();

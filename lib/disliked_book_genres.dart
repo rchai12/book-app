@@ -79,7 +79,7 @@ class _DislikedBookGenresPageState extends State<DislikedBookGenresPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Disliked Genres?!'),
+        title: Text('What are your most disliked Genres?!'),
         backgroundColor: Colors.blue,
       ),
       body: SingleChildScrollView(

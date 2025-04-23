@@ -79,7 +79,7 @@ class _FavoriteBookGenresPageState extends State<FavoriteBookGenresPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Favorite Genres?!'),
+        title: Text('What are your Favorite Genres?!'),
         backgroundColor: Colors.blue,
       ),
       body: SingleChildScrollView(
