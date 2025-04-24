@@ -29,6 +29,17 @@ class _BookSearchPageState extends State<BookSearchPage> {
   final int _maxResults = 10;
   bool _hasMore = true;
   final ScrollController _scrollController = ScrollController();
+  final List<String> _genres = [
+    'Fiction', 'Non-Fiction', 'Mystery', 'Fantasy', 'Science Fiction',
+    'Romance', 'Thriller', 'Biography', 'Self-Help', 'Historical Fiction',
+    'Adventure', 'Horror', 'Young Adult (YA)', 'Dystopian', 'Poetry',
+    'Memoir', 'Crime', 'Psychological Thriller', 'Political Fiction',
+    'Magic Realism', 'Literary Fiction', 'Classics', 'Children\'s Fiction',
+    'Cookbooks', 'Travel', 'Humor', 'Sports', 'Art', 'Music', 'True Crime',
+    'Health & Wellness', 'Philosophy', 'Religion & Spirituality', 'Parenting',
+    'Business & Economics', 'Science', 'Mathematics', 'Anthology', 'Graphic Novels',
+    'Comics', 'Environmental Fiction', 'Western', 'International',
+  ];
 
   @override
   void initState() {
@@ -50,44 +61,41 @@ class _BookSearchPageState extends State<BookSearchPage> {
   }
 
   void _search({bool isNewSearch = true}) async {
+    print("Search triggered");
+    print('Loading is: $_loading\nHasMore is: $_hasMore');
     if (_loading || !_hasMore) return;
-
+    print("Search Query: ${_controller.text}");
     setState(() => _loading = true);
     try {
       if (isNewSearch) {
         _startIndex = 0;
         _hasMore = true;
+        _books.clear();
       }
-
       final results = await GoogleBooksApi.searchBooks(
         _controller.text,
         startIndex: _startIndex,
         maxResults: _maxResults,
       );
-
+      print("Search results count: ${results.length}");
       if (results.length < _maxResults && results.isNotEmpty) {
         _startIndex += results.length;
       } else {
         _startIndex += _maxResults;
       }
-
       final favorites = await widget.authService.getFavorites();
       final readingList = await widget.authService.getReadingList();
-
       setState(() {
         if (isNewSearch) {
-          _books = results;
+          _books = results.isNotEmpty ? results : [];
         } else {
           final existingIds = _books.map((b) => b.id).toSet();
           final newBooks = results.where((b) => !existingIds.contains(b.id)).toList();
           _books.addAll(newBooks);
         }
-
         _favoriteIds = favorites.map((book) => book.id).toSet();
         _readingListIds = readingList.map((book) => book.id).toSet();
-
-        if (results.length < _maxResults) _hasMore = false;
-        _startIndex += _maxResults;
+        _hasMore = results.length >= _maxResults;
       });
     } catch (e) {
       print(e);
@@ -151,6 +159,38 @@ class _BookSearchPageState extends State<BookSearchPage> {
     }
   }
 
+  void _showFilterDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Select Genre'),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: _genres.map(_buildGenreOption).toList(),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildGenreOption(String genre) {
+    return ListTile(
+      title: Text(genre),
+      onTap: () {
+        Navigator.pop(context);
+        _controller.clear();
+        _controller.text = 'subject:$genre';
+        setState(() {
+          _hasMore = true; 
+        });
+        _search(isNewSearch: true);
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -173,7 +213,12 @@ class _BookSearchPageState extends State<BookSearchPage> {
               ),
               suffixIcon: IconButton(
                 icon: Icon(Icons.search),
-                onPressed: _search,
+                onPressed: () {
+                  setState(() {
+                    _hasMore = true; 
+                  });
+                  _search(isNewSearch: true); 
+                },
               ),
             ),
           ),
@@ -291,6 +336,12 @@ class _BookSearchPageState extends State<BookSearchPage> {
             ),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: const Color.fromARGB(255, 172, 190, 221),
+        child: Icon(Icons.filter_list),
+        tooltip: 'Filter by Genre',
+        onPressed: _showFilterDialog,
       ),
     );
   }
