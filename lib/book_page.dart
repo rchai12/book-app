@@ -5,6 +5,7 @@ import 'book_search_page.dart';
 import 'trending_page.dart';
 import 'favorites_page.dart';
 import 'reading_list_page.dart';
+import 'recommended_page.dart';
 
 class BookPage extends StatefulWidget {
   final User user;
@@ -31,6 +32,7 @@ class _BookPageState extends State<BookPage> {
     _pages = [
       BookSearchPage(user: widget.user, authService: widget.authService),
       TrendingBooksPage(user: widget.user, authService: widget.authService),
+      RecommendedPage(user: widget.user, authService: widget.authService),
       FavoritesPage(user: widget.user, authService: widget.authService),
       ReadingListPage(user: widget.user, authService: widget.authService),
     ];

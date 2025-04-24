@@ -156,10 +156,10 @@ class _BookDetailsPageState extends State<BookDetailsPage> {
   @override
   Widget build(BuildContext context) {
     final book = widget.book;
-
     return Scaffold(
       appBar: AppBar(
         title: Text(book.title),
+        backgroundColor: Colors.lightGreen,
         actions: [
           IconButton(
             icon: Icon(

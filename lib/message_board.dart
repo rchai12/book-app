@@ -77,9 +77,9 @@ class _MessageBoardPageState extends State<MessageBoardPage> {
           userId: widget.user.uid,
         );
         _loadMessages();
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Message deleted.')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Message deleted.'), duration: Duration(seconds: 1),));
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error deleting: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error deleting: $e'), duration: Duration(seconds: 1),));
       }
     }
   }
@@ -95,9 +95,9 @@ class _MessageBoardPageState extends State<MessageBoardPage> {
       );
       _messageController.clear();
       _loadMessages();
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Message sent.')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Message sent.'), duration: Duration(seconds: 1),));
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error sending message: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error sending message: $e'), duration: Duration(seconds: 1),));
     }
   }
 

@@ -91,7 +91,10 @@ class _MessageBoardsPageState extends State<MessageBoardsPage> {
                 } catch (e) {
                   Navigator.of(context).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error creating board: $e')),
+                    SnackBar(
+                      content: Text('Error creating board: $e'),
+                      duration: Duration(seconds: 1),
+                    ),
                   );
                 }
               }

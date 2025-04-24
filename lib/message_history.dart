@@ -54,9 +54,9 @@ class _MessageHistoryPageState extends State<MessageHistoryPage> {
           userId: widget.user.uid,
         );
         _loadMessages();
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Message deleted.')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Message deleted.'), duration: Duration(seconds: 1),));
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error deleting: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error deleting: $e'), duration: Duration(seconds: 1),));
       }
     }
   }

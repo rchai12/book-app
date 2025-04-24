@@ -52,15 +52,33 @@ class _ReadingStatusPageState extends State<ReadingStatusPage> {
     if (_favoriteIds.contains(book.id)) {
       await widget.authService.removeBookFromFavorites(book.id);
       setState(() => _favoriteIds.remove(book.id));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${book.title} removed from Favorites!'),
+          duration: Duration(seconds: 1),
+        ),
+      );
     } else {
       await widget.authService.addBookToFavorites(book);
       setState(() => _favoriteIds.add(book.id));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${book.title} added to Favorites!'),
+          duration: Duration(seconds: 1),
+        ),
+      );
     }
   }
 
   void _removeBook(Book book) async {
     await widget.authService.removeBookFromReadingList(book.id);
     setState(() => _books.removeWhere((b) => b.id == book.id));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${book.title} removed from reading list!'),
+        duration: Duration(seconds: 1),
+      ),
+    );
   }
 
   ReadingStatus getNextStatus(ReadingStatus current) {
@@ -165,6 +183,7 @@ class _ReadingStatusPageState extends State<ReadingStatusPage> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text('${book.title} moved to ${nextStatus.label}.'),
+                                  duration: Duration(seconds: 1),
                                 ),
                               );
                             }

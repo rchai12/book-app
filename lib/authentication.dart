@@ -415,7 +415,6 @@ class AuthService {
     }
   }
 
-
   Future<void> removeBookFromReadingList(String bookId) async {
     User? user = _auth.currentUser;
     if (user == null) throw Exception('No user is currently signed in.');
@@ -707,6 +706,28 @@ class AuthService {
       }
     }
     return null;
+  }
+
+  Future<List<Book>> getBooks() async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      try {
+        QuerySnapshot querySnapshot = await _firestore
+            .collection('users')
+            .doc(user.uid)
+            .collection('books')
+            .get();
+        List<Book> allBooks = querySnapshot.docs.map((doc) {
+          return Book.fromFirestore(doc.data() as Map<String, dynamic>);
+        }).toList();
+        return allBooks;
+      } catch (e) {
+        print('Error fetching books: $e');
+        throw Exception('Failed to fetch books.');
+      }
+    } else {
+      throw Exception('No user is currently signed in.');
+    }
   }
 
   User? get currentUser => _auth.currentUser;

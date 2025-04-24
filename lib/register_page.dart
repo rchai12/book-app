@@ -49,14 +49,14 @@ class _RegisterPageState extends State<RegisterPage> {
           dateOfBirth: _selectedDOB!,
         );
         if (user != null) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('User registered successfully')));
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('User registered successfully'), duration: Duration(seconds: 1),));
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => LoginPage()),
           );
         }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), duration: Duration(seconds: 1),));
       } finally {
         setState(() {
           _isLoading = false;

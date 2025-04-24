@@ -53,7 +53,10 @@ class _FavoritesPageState extends State<FavoritesPage> {
       _favoriteBooks.removeWhere((book) => book.id == bookId);
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Removed from favorites')),
+      SnackBar(
+        content: Text('Removed from favorites'),
+        duration: Duration(seconds: 1),
+      ),
     );
   }
 
@@ -64,13 +67,19 @@ class _FavoritesPageState extends State<FavoritesPage> {
         await widget.authService.removeBookFromReadingList(book.id);
         _readingListIds.remove(book.id);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Removed from Reading List')),
+          SnackBar(
+            content: Text('Removed from Reading List'),
+            duration: Duration(seconds: 1),
+          ),
         );
       } else {
         await widget.authService.addBookToReadingList(book: book, status: ReadingStatus.wantToRead);
         _readingListIds.add(book.id);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Added to Reading List')),
+          SnackBar(
+            content: Text('Added to Reading List'),
+            duration: Duration(seconds: 1),
+          ),
         );
       }
       setState(() {});

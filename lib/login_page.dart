@@ -33,7 +33,10 @@ class _LoginPageState extends State<LoginPage> {
 
         if (user != null) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Welcome back, ${user.email}')),
+            SnackBar(
+              content: Text('Welcome back, ${user.email}'),
+              duration: Duration(seconds: 1),
+            ),
           );
           Navigator.pushReplacement(
             context,
@@ -42,7 +45,10 @@ class _LoginPageState extends State<LoginPage> {
         }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Login failed: $e')),
+          SnackBar(
+            content: Text('Login failed: $e'),
+            duration: Duration(seconds: 1),
+          ),
         );
       } finally {
         setState(() {
