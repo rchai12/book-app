@@ -15,21 +15,21 @@ class CreateReviewPage extends StatelessWidget {
 }
 
 // Placeholder widget for "Past Reviews" tab
-class PastReviewsPage extends StatefulWidget {
+class MyReviewsPage extends StatefulWidget {
   User user;
   final AuthService authService;
 
-  PastReviewsPage({
+  MyReviewsPage({
     super.key,
     required this.user,
     required this.authService,
   });
 
   @override
-  State<PastReviewsPage> createState() => _PastReviewsPageState();
+  State<MyReviewsPage> createState() => _MyReviewsPageState();
 }
 
-class _PastReviewsPageState extends State<PastReviewsPage> {
+class _MyReviewsPageState extends State<MyReviewsPage> {
   List<Book> _reviews = [];
   bool _loading = true;
 

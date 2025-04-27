@@ -24,14 +24,14 @@ class ReviewsPage extends StatelessWidget {
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Create New Review'),
-              Tab(text: 'Past Reviews'),
+              Tab(text: 'My Reviews'),
             ],
           ),
         ),
         body: TabBarView(
           children: [
-            CreateReviewPage(),   // Placeholder for Create New Review page
-            PastReviewsPage(user: user, authService: authService,),    // Placeholder for Past Reviews page
+            CreateReviewPage(),   // To be removed and incorporated 
+            MyReviewsPage(user: user, authService: authService,),
           ],
         ),
       ),
