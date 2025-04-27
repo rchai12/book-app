@@ -1,4 +1,5 @@
 import 'package:bookapp/message_boards_page.dart';
+import 'package:bookapp/reviews_page.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'authentication.dart';
@@ -6,6 +7,7 @@ import 'account_page.dart';
 import 'profile_page.dart';
 import 'login_page.dart';
 import 'book_page.dart';
+import 'reviews_page.dart';
 
 class HomePage extends StatefulWidget {
   User user;
@@ -24,6 +26,7 @@ class _HomePageState extends State<HomePage> {
     'Message Boards',
     'Profile',
     'Account Settings',
+    'Reviews',
   ];
 
   late List<Widget> _pages;
@@ -36,6 +39,7 @@ class _HomePageState extends State<HomePage> {
       MessageBoardsPage(user: widget.user, authService: widget.authService),
       ProfilePage(user: widget.user, authService: widget.authService),
       AccountPage(user: widget.user, authService: widget.authService),
+      ReviewsPage(user: widget.user, authService: widget.authService),
     ];
   }
 
@@ -117,6 +121,11 @@ class _HomePageState extends State<HomePage> {
                 leading: Icon(Icons.settings),
                 title: Text('Account Settings'),
                 onTap: () => _navigateToPage(3),
+              ),
+              ListTile(
+                leading: Icon(Icons.star),
+                title: Text('My Reviews'),
+                onTap: () => _navigateToPage(4),
               ),
               Divider(),
               ListTile(

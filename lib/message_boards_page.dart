@@ -121,6 +121,7 @@ class _MessageBoardsPageState extends State<MessageBoardsPage> {
             return Center(child: Text('No message boards available.'));
           } else {
             List<Map<String, dynamic>> boards = snapshot.data!;
+            boards.sort((a, b) => a['title'].toString().toLowerCase().compareTo(b['title'].toString().toLowerCase()));
             return Padding(
               padding: const EdgeInsets.all(10.0),
               child: GridView.builder(

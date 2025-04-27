@@ -658,26 +658,23 @@ class AuthService {
     }
   }
 
-  Future<List<Book>> getReviews() async {
+  Stream<List<Book>> getReviewsStream() {
     User? user = _auth.currentUser;
     if (user != null) {
-      try {
-        QuerySnapshot querySnapshot = await _firestore
-            .collection('users')
-            .doc(user.uid)
-            .collection('books')
-            .where('reviewed', isEqualTo: true)
-            .get();
-        List<Book> reviewedBooks = querySnapshot.docs.map((doc) {
-          return Book.fromFirestore(doc.data() as Map<String, dynamic>);
-        }).toList();
-        return reviewedBooks;
-      } catch (e) {
-        print('Error fetching reviewed books: $e');
-        throw Exception('Failed to fetch reviewed books.');
-      }
+      return _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('books')
+          .where('reviewed', isEqualTo: true)
+          .snapshots()
+          .map((snapshot) {
+            return snapshot.docs.map((doc) {
+              return Book.fromFirestore(doc.data());
+            }).toList();
+          });
     } else {
-      throw Exception('No user is currently signed in.');
+      // Return an empty stream if user is not logged in
+      return const Stream.empty();
     }
   }
 
