@@ -31,7 +31,7 @@ class ReviewsPage extends StatelessWidget {
         body: TabBarView(
           children: [
             CreateReviewPage(),   // Placeholder for Create New Review page
-            PastReviewsPage(),    // Placeholder for Past Reviews page
+            PastReviewsPage(user: user, authService: authService,),    // Placeholder for Past Reviews page
           ],
         ),
       ),
