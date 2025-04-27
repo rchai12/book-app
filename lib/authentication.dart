@@ -681,6 +681,26 @@ class AuthService {
     }
   }
 
+  Stream<List<Book>> getReviewsStream() {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      return _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('books')
+          .where('reviewed', isEqualTo: true)
+          .snapshots()
+          .map((snapshot) {
+            return snapshot.docs.map((doc) {
+              return Book.fromFirestore(doc.data());
+            }).toList();
+          });
+    } else {
+      // Return an empty stream if user is not logged in
+      return const Stream.empty();
+    }
+  }
+
   Future<Map<String, dynamic>?> getBookReview(String bookId) async {
     User? user = _auth.currentUser;
     if (user != null) {
