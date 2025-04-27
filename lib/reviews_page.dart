@@ -3,6 +3,7 @@ import 'book.dart';
 import 'authentication.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'book_details.dart';
+import 'review_dialogs.dart';
 
 class ReviewsPage extends StatefulWidget {
   User user;
@@ -65,6 +66,17 @@ class _ReviewsPageState extends State<ReviewsPage> {
                     ),
                   );
                 },
+                // TODO: implement a button to just edit review.
+                // onTap: () {
+                //   ReviewDialogs.showEditReviewDialog(
+                //     context,
+                //     title: "Alert",
+                //     message: "This is a simple alert dialog.", 
+                //     onConfirm: () { 
+                //       print("Alert dialog dismissed.");
+                //     },
+                //   );
+                // }
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Row(
