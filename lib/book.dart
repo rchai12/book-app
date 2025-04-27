@@ -15,7 +15,10 @@ class Book {
   final String previewLink;
   final String infoLink;
   final String language;
-  final ReadingStatus? readingStatus;
+  bool? favorite;
+  bool? readingList;
+  bool? reviewed;
+  ReadingStatus? readingStatus;
   String? review;
   int? rating;
 
@@ -34,6 +37,9 @@ class Book {
     required this.previewLink,
     required this.infoLink,
     required this.language,
+    this.favorite,
+    this.readingList,
+    this.reviewed,
     this.readingStatus,
     this.review,
     this.rating,
@@ -55,7 +61,10 @@ class Book {
       'previewLink': previewLink,
       'infoLink': infoLink,
       'language': language,
-      'readingStatus': readingStatus?.name,
+      'favorite': favorite,
+      'reading_list': readingList,
+      'reviewed': reviewed,
+      'reading_status': readingStatus?.name,
       'review': review,
       'rating': rating,
     };
@@ -82,9 +91,12 @@ class Book {
       previewLink: volumeInfo['previewLink'] ?? '',
       infoLink: volumeInfo['infoLink'] ?? '',
       language: volumeInfo['language'] ?? '',
-      readingStatus: json['status'] != null
+      favorite: json['favorite'] == true,
+      readingList: json['reading_list'] == true,
+      reviewed: json['reviewed'] == true,
+      readingStatus: json['reading_status'] != null
           ? ReadingStatus.values.firstWhere(
-              (e) => e.name == json['status'],
+              (e) => e.name == json['reading_status'],
               orElse: () => ReadingStatus.wantToRead,
             )
           : null,
@@ -109,9 +121,12 @@ class Book {
       previewLink: data['previewLink'] ?? '',
       infoLink: data['infoLink'] ?? '',
       language: data['language'] ?? '',
-      readingStatus: data['status'] != null
+      favorite: data['favorite'] == true,
+      readingList: data['reading_list'] == true,
+      reviewed: data['reviewed'] == true,
+      readingStatus: data['reading_status'] != null
         ? ReadingStatus.values.firstWhere(
-            (e) => e.name == data['status'],
+            (e) => e.name == data['reading_status'],
             orElse: () => ReadingStatus.wantToRead,
           )
         : null,
