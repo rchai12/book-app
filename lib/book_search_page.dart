@@ -208,6 +208,7 @@ class _BookSearchPageState extends State<BookSearchPage> {
                     }
                     final book = _books[index];
                     final isFavorite = _favoriteIds.contains(book.id);
+                    final isReadingList = _readingListIds.contains(book.id);
                     return Card(
                       elevation: 5,
                       child: InkWell(
@@ -269,13 +270,9 @@ class _BookSearchPageState extends State<BookSearchPage> {
                                   ),
                                   IconButton(
                                     icon: Icon(
-                                      _readingListIds.contains(book.id)
-                                          ? Icons.bookmark
-                                          : Icons.bookmark_outline,
+                                      isReadingList ? Icons.bookmark : Icons.bookmark_outline,
                                     ),
-                                    tooltip: _readingListIds.contains(book.id)
-                                        ? 'Already in Reading List'
-                                        : 'Read Later',
+                                    tooltip: isReadingList ? 'Already in Reading List' : 'Read Later',
                                     onPressed: () => _handleAddToReadingList(book),
                                   ),
                                 ],
