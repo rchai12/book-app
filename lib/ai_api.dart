@@ -52,4 +52,32 @@ class AIRecommendationService {
 
     return buffer.toString();
   }
+
+  Future<String> getBookAnalysis(Book book) async {
+    final prompt = '''
+    You are an expert book reviewer. 
+    Analyze the book "${book.title}" by ${book.authors.join(', ')}.
+
+    Please organize your response into the following sections:
+    - **Writing Quality** followed by your opinion on the writing quality in a clear, concise paragraph.
+    - **Common Praise** followed by your opinion on common praise of the book in a clear, concise paragraph.
+    - **Common Criticism** followed by your opinion on common criticism of the book in a clear, concise paragraph.
+    - **Other Notes** followed by any other relevant thoughts on the book.
+
+    Do not use bullet points. Please ensure that each section starts with a bold title (e.g., **Writing Quality**) followed by the content on a new line.
+
+    Use clear and concise language. 
+    Only return the markdown text. Do not include anything else.
+
+    If you don't know something, you can say "Information not widely available."
+    ''';
+    try {
+      final response = await _model.generateContent([Content.text(prompt)]);
+      print('Analysis received for book: ${book.title}');
+      return response.text ?? "";
+    } catch (e) {
+      print('AI Analysis Error: $e');
+      return "Failed to analyze the book.";
+    }
+  }
 }

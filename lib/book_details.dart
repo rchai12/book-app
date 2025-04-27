@@ -4,6 +4,7 @@ import 'preview_page.dart';
 import 'authentication.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'reading_status.dart';
+import 'ai_api.dart';
 
 class BookDetailsPage extends StatefulWidget {
   final Book book;
@@ -27,6 +28,7 @@ class _BookDetailsPageState extends State<BookDetailsPage> {
   int _userRating = 0;
   String _userReview = '';
   final _reviewController = TextEditingController();
+  final AIRecommendationService _aiService = AIRecommendationService();
 
   @override
   void initState() {
@@ -153,6 +155,95 @@ class _BookDetailsPageState extends State<BookDetailsPage> {
     );
   }
 
+  Future<void> analyzeBook() async {
+    showDialog(
+      context: context,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+      barrierDismissible: false,
+    );
+    try {
+      final analysis = await _aiService.getBookAnalysis(widget.book);
+      print(analysis);
+      Navigator.pop(context);
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Book Analysis'),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: parseAnalysis(analysis),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      Navigator.pop(context);
+      print('Error analyzing book: $e');
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Error'),
+          content: const Text('Failed to analyze the book. Please try again later.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close'),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  List<Widget> parseAnalysis(String markdown) {
+    final lines = markdown.split('\n');
+    List<Widget> widgets = [];
+    String? currentTitle;
+    StringBuffer currentContent = StringBuffer();
+    for (var line in lines) {
+      if (line.startsWith('**')) {
+        if (currentTitle != null && currentContent.isNotEmpty) {
+          widgets.add(_buildSection(currentTitle, currentContent.toString()));
+        }
+        currentTitle = line.replaceFirst('**', '').replaceFirst('**', '').trim();
+        currentContent.clear();
+      } else if (line.trim().isNotEmpty) {
+        currentContent.writeln(line.trim());
+      }
+    }
+    if (currentTitle != null && currentContent.isNotEmpty) {
+      widgets.add(_buildSection(currentTitle, currentContent.toString()));
+    }
+    return widgets;
+  }
+
+  Widget _buildSection(String title, String content) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 8),
+          Text(
+            content,
+            style: TextStyle(fontSize: 16),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final book = widget.book;
@@ -202,6 +293,17 @@ class _BookDetailsPageState extends State<BookDetailsPage> {
             Text('Description', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             SizedBox(height: 8),
             Text(book.description),
+            SizedBox(height: 30),
+            Center(
+              child: ElevatedButton.icon(
+                onPressed: () => analyzeBook(),
+                icon: Icon(Icons.auto_awesome),
+                label: Text('Analyze Book (AI)'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.teal,
+                ),
+              ),
+            ),
             SizedBox(height: 30),
             Center(
               child: ElevatedButton.icon(
