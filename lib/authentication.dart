@@ -340,12 +340,12 @@ class AuthService {
           final data = docSnapshot.data() as Map<String, dynamic>;
           bool isReviewed = data['reviewed'] == true;
           bool isReadingList = data['readingList'] == true;
-          if (!isReviewed && !isReadingList) {
-            await bookDocRef.delete();
-            print('Book removed from favorites and deleted.');
-          } else {
+          if (isReviewed || isReadingList) {
             await bookDocRef.update({'favorite': false});
             print('Book removed from favorites but not deleted.');
+          } else {
+            await bookDocRef.delete();
+            print('Book removed from favorites and deleted.');
           }
         } else {
           print('Book with ID $bookId does not exist in the database.');
@@ -429,12 +429,15 @@ class AuthService {
         var data = docSnapshot.data() as Map<String, dynamic>;
         bool isFavorite = data['favorite'] == true;
         bool isReviewed = data['reviewed'] == true;
-        if (!isFavorite && !isReviewed) {
+        if (isFavorite || isReviewed) {
+          await bookDocRef.update({
+            'reading_list': false,
+            'reading_status': null,
+          });
+          print('Book removed from reading list, kept in collection.');
+        } else {
           await bookDocRef.delete();
           print('Book removed entirely from user collection.');
-        } else {
-          await bookDocRef.update({'reading_list': false});
-          print('Book removed from reading list, kept in collection.');
         }
       } else {
         throw Exception('Book not found in user\'s books collection.');
@@ -657,6 +660,39 @@ class AuthService {
       throw Exception('Failed to update review.');
     }
   }
+
+  Future<void> removeBookFromReviews(String bookId) async {
+    User? user = _auth.currentUser;
+    if (user == null) throw Exception('No user is currently signed in.');
+    try {
+      DocumentReference bookDocRef = _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('books')
+          .doc(bookId);
+      DocumentSnapshot docSnapshot = await bookDocRef.get();
+      if (!docSnapshot.exists) {
+        throw Exception('Book not found in user\'s books collection.');
+      }
+      var bookData = docSnapshot.data() as Map<String, dynamic>;
+      bool isFavorite = bookData['favorite'] == true;
+      bool isInReadingList = bookData['reading_list'] == true;
+      if (isFavorite || isInReadingList) {
+        await bookDocRef.update({
+          'reviewed': false,
+          'rating': null,
+          'review': null,
+        });
+        print('Book unreviewed but kept in user collection.');
+      } else {
+        await bookDocRef.delete();
+        print('Book removed entirely from user collection (no favorite, no reading list).');
+      }
+    } catch (e) {
+      throw Exception('Error removing book from reviews: ${e.toString()}');
+    }
+  }
+
 
   Stream<List<Book>> getReviewsStream() {
     User? user = _auth.currentUser;

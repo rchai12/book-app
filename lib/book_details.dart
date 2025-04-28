@@ -136,6 +136,22 @@ class _BookDetailsPageState extends State<BookDetailsPage> {
     }
   }
 
+  Future<void> _removeUserReview() async {
+    try {
+      await widget.authService.removeBookFromReviews(widget.book.id);
+      setState(() {
+        _userReview = '';
+        _userRating = 0;
+      });
+    } catch (e) {
+      print('Error removing review: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to remove review.')),
+      );
+    }
+  }
+
+
   Widget _buildRatingStars() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
@@ -313,17 +329,34 @@ class _BookDetailsPageState extends State<BookDetailsPage> {
               ),
             ),
             if (_userReview.isNotEmpty && _userRating > 0)
-              Padding(
-                padding: const EdgeInsets.only(top: 20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Your Review:', style: TextStyle(fontWeight: FontWeight.bold)),
-                    SizedBox(height: 8),
-                    Text(_userReview),
-                    SizedBox(height: 10),
-                    Text('Your Rating: $_userRating/5 stars'),
-                  ],
+              Dismissible(
+                key: Key('user_review_${widget.book.id}'),
+                direction: DismissDirection.endToStart,
+                background: Container(
+                  color: Colors.red,
+                  alignment: Alignment.centerRight,
+                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  child: Icon(Icons.delete, color: Colors.white),
+                ),
+                onDismissed: (direction) async {
+                  await _removeUserReview();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Review removed.')),
+                  );
+                },
+                child: Container( // <<--- ADD THIS CONTAINER
+                  width: double.infinity, // <<--- FORCE FULL WIDTH
+                  padding: const EdgeInsets.only(top: 20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Your Review:', style: TextStyle(fontWeight: FontWeight.bold)),
+                      SizedBox(height: 8),
+                      Text(_userReview),
+                      SizedBox(height: 10),
+                      Text('Your Rating: $_userRating/5 stars'),
+                    ],
+                  ),
                 ),
               ),
             SizedBox(height: 30),
