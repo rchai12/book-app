@@ -45,92 +45,108 @@ class _ReviewsPageState extends State<ReviewsPage> {
           itemCount: _reviewedBooks.length,
           itemBuilder: (context, index) {
             final review = _reviewedBooks[index];
-            return Card(
-              elevation: 5,
-              margin: const EdgeInsets.symmetric(vertical: 8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+            return Dismissible(
+              key: Key('review_${review.id}'),
+              direction: DismissDirection.endToStart,
+              background: Container(
+                color: Colors.red,
+                alignment: Alignment.centerRight,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: const Icon(Icons.delete, color: Colors.white),
               ),
-              child: InkWell(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (_) => BookDetailsPage(
-                            book: review,
-                            user: widget.user,
-                            authService: widget.authService,
-                          ),
-                    ),
+              onDismissed: (direction) async {
+                try {
+                  await widget.authService.removeBookFromReviews(review.id);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Review removed')),
                   );
-                },
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                    children: [
-                      // Thumbnail on the left
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.network(
-                          review.thumbnail.isNotEmpty
-                            ? review.thumbnail
-                            : 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/480px-No_image_available.svg.png',
-                          width: 100,
-                          height: 140,
-                          fit: BoxFit.cover,
+                } catch (e) {
+                  print('Error removing review: $e');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to remove review.')),
+                  );
+                }
+              },
+              child: Card(
+                elevation: 5,
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => BookDetailsPage(
+                          book: review,
+                          user: widget.user,
+                          authService: widget.authService,
                         ),
                       ),
-                      const SizedBox(width: 12),
-
-                      // Info on the right
-                      Expanded(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              review.title,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              (review.authors as List).join(', '),
-                              style: const TextStyle(
-                                fontSize: 13,
-                                color: Colors.grey,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Row(
-                              children: List.generate(5, (i) {
-                                int rating =
-                                    review.rating ??
-                                    0; // Defaults to 0 if review.rating is null
-                                return Icon(
-                                  i < rating ? Icons.star : Icons.star_border,
-                                  color: Colors.amber,
-                                  size: 16,
-                                );
-                              }),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              review.review ?? 'No review provided',
-                              maxLines: 3,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontSize: 14),
-                            ),
-                          ],
+                    );
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            review.thumbnail.isNotEmpty
+                              ? review.thumbnail
+                              : 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/No_image_available.svg/480px-No_image_available.svg.png',
+                            width: 100,
+                            height: 140,
+                            fit: BoxFit.cover,
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                review.title,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                (review.authors as List).join(', '),
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Row(
+                                children: List.generate(5, (i) {
+                                  int rating = review.rating ?? 0;
+                                  return Icon(
+                                    i < rating ? Icons.star : Icons.star_border,
+                                    color: Colors.amber,
+                                    size: 16,
+                                  );
+                                }),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                review.review ?? 'No review provided',
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontSize: 14),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
