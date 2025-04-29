@@ -5,7 +5,7 @@ import 'book.dart';
 import 'authentication.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'book_details.dart';
-import 'edit_review_dialog.dart';
+import 'review_dialogs.dart';
 
 class ReviewsPage extends StatefulWidget {
   User user;

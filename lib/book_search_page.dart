@@ -5,8 +5,7 @@ import 'book_details.dart';
 import 'authentication.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'reading_status.dart';
-import 'edit_review_dialog.dart';
-import 'create_review_dialog.dart';
+import 'review_dialogs.dart';
 
 class BookSearchPage extends StatefulWidget {
   User user;
@@ -373,28 +372,27 @@ class _BookSearchPageState extends State<BookSearchPage> {
                                             ? 'Edit Review'
                                             : 'Create a Review',
                                     onPressed: () {
-                                      final callback = () async {
-                                        final reviewed =
-                                            await widget.authService
-                                                .getReviewedList();
-                                        setState(() {
-                                          _reviewedIds =
-                                              reviewed.map((b) => b.id).toSet();
-                                        });
-                                      };
-                                      isReviewed
-                                      ? showEditReviewDialog(
+                                      final showDialogFn =
+                                          isReviewed
+                                              ? showEditReviewDialog
+                                              : showCreateReviewDialog;
+                                      showDialogFn(
                                         context: context,
                                         book: book,
                                         user: widget.user,
                                         authService: widget.authService,
-                                        onReviewSubmitted: callback)
-                                      : showCreateReviewDialog(
-                                        context: context,
-                                        book: book,
-                                        user: widget.user,
-                                        authService: widget.authService,
-                                        onReviewSubmitted: callback);
+                                        onReviewSubmitted: () async {
+                                          final reviewed =
+                                              await widget.authService
+                                                  .getReviewedList();
+                                          setState(() {
+                                            _reviewedIds =
+                                                reviewed
+                                                    .map((b) => b.id)
+                                                    .toSet();
+                                          });
+                                        },
+                                      );
                                     },
                                   ),
                                   IconButton(

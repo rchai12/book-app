@@ -5,6 +5,8 @@ import 'book_details.dart';
 import 'authentication.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'reading_status.dart';
+import 'reading_status.dart';
+import 'review_dialogs.dart';
 
 class TrendingBooksPage extends StatefulWidget {
   User user;
@@ -24,6 +26,7 @@ class _TrendingBooksPageState extends State<TrendingBooksPage> {
   List<Book> _books = [];
   bool _loading = false;
   Set<String> _favoriteIds = {};
+  Set<String> _reviewedIds = {};
   Set<String> _readingListIds = {};
   int _startIndex = 0;
   final int _maxResults = 10;
@@ -59,6 +62,7 @@ class _TrendingBooksPageState extends State<TrendingBooksPage> {
         orderBy: 'relevance',
       );
       final favorites = await widget.authService.getFavorites();
+      final reviewed = await widget.authService.getReviewedList();
       final readingList = await widget.authService.getReadingList();
       setState(() {
         if (loadMore) {
@@ -69,6 +73,7 @@ class _TrendingBooksPageState extends State<TrendingBooksPage> {
         _startIndex += _maxResults;
         _hasMore = results.length == _maxResults;
         _favoriteIds = favorites.map((book) => book.id).toSet();
+        _reviewedIds = reviewed.map((book) => book.id).toSet();
         _readingListIds = readingList.map((book) => book.id).toSet();
       });
     } catch (e) {
@@ -169,7 +174,7 @@ class _TrendingBooksPageState extends State<TrendingBooksPage> {
 
                     final book = _books[index];
                     final isFavorite = _favoriteIds.contains(book.id);
-
+                    final isReviewed = _reviewedIds.contains(book.id);
                     return Card(
                       elevation: 5,
                       child: InkWell(
@@ -228,6 +233,41 @@ class _TrendingBooksPageState extends State<TrendingBooksPage> {
                                       color: isFavorite ? Colors.red : null,
                                     ),
                                     onPressed: () => _toggleFavorite(book),
+                                  ),
+                                  IconButton(
+                                    icon: Icon(
+                                      isReviewed
+                                          ? Icons.star
+                                          : Icons.star_border_outlined,
+                                      color: isReviewed ? Colors.amber : null,
+                                    ),
+                                    tooltip:
+                                        isReviewed
+                                            ? 'Edit Review'
+                                            : 'Create a Review',
+                                    onPressed: () {
+                                      final showDialogFn =
+                                          isReviewed
+                                              ? showEditReviewDialog
+                                              : showCreateReviewDialog;
+                                      showDialogFn(
+                                        context: context,
+                                        book: book,
+                                        user: widget.user,
+                                        authService: widget.authService,
+                                        onReviewSubmitted: () async {
+                                          final reviewed =
+                                              await widget.authService
+                                                  .getReviewedList();
+                                          setState(() {
+                                            _reviewedIds =
+                                                reviewed
+                                                    .map((b) => b.id)
+                                                    .toSet();
+                                          });
+                                        },
+                                      );
+                                    },
                                   ),
                                   IconButton(
                                     icon: Icon(
