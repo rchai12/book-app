@@ -5,16 +5,14 @@ import 'book_details.dart';
 import 'authentication.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'reading_status.dart';
+import 'edit_review_dialog.dart';
+import 'create_review_dialog.dart';
 
 class BookSearchPage extends StatefulWidget {
   User user;
   final AuthService authService;
 
-  BookSearchPage({
-    super.key,
-    required this.user,
-    required this.authService,
-  });
+  BookSearchPage({super.key, required this.user, required this.authService});
   @override
   _BookSearchPageState createState() => _BookSearchPageState();
 }
@@ -25,27 +23,63 @@ class _BookSearchPageState extends State<BookSearchPage> {
   bool _loading = false;
   Set<String> _favoriteIds = {};
   Set<String> _readingListIds = {};
+  Set<String> _reviewedIds = {};
   int _startIndex = 0;
   final int _maxResults = 10;
   bool _hasMore = true;
   final ScrollController _scrollController = ScrollController();
   final List<String> _genres = [
-    'Fiction', 'Non-Fiction', 'Mystery', 'Fantasy', 'Science Fiction',
-    'Romance', 'Thriller', 'Biography', 'Self-Help', 'Historical Fiction',
-    'Adventure', 'Horror', 'Young Adult (YA)', 'Dystopian', 'Poetry',
-    'Memoir', 'Crime', 'Psychological Thriller', 'Political Fiction',
-    'Magic Realism', 'Literary Fiction', 'Classics', 'Children\'s Fiction',
-    'Cookbooks', 'Travel', 'Humor', 'Sports', 'Art', 'Music', 'True Crime',
-    'Health & Wellness', 'Philosophy', 'Religion & Spirituality', 'Parenting',
-    'Business & Economics', 'Science', 'Mathematics', 'Anthology', 'Graphic Novels',
-    'Comics', 'Environmental Fiction', 'Western', 'International',
+    'Fiction',
+    'Non-Fiction',
+    'Mystery',
+    'Fantasy',
+    'Science Fiction',
+    'Romance',
+    'Thriller',
+    'Biography',
+    'Self-Help',
+    'Historical Fiction',
+    'Adventure',
+    'Horror',
+    'Young Adult (YA)',
+    'Dystopian',
+    'Poetry',
+    'Memoir',
+    'Crime',
+    'Psychological Thriller',
+    'Political Fiction',
+    'Magic Realism',
+    'Literary Fiction',
+    'Classics',
+    'Children\'s Fiction',
+    'Cookbooks',
+    'Travel',
+    'Humor',
+    'Sports',
+    'Art',
+    'Music',
+    'True Crime',
+    'Health & Wellness',
+    'Philosophy',
+    'Religion & Spirituality',
+    'Parenting',
+    'Business & Economics',
+    'Science',
+    'Mathematics',
+    'Anthology',
+    'Graphic Novels',
+    'Comics',
+    'Environmental Fiction',
+    'Western',
+    'International',
   ];
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(() {
-      if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+      if (_scrollController.position.pixels >=
+          _scrollController.position.maxScrollExtent - 200) {
         if (_hasMore && !_loading) _search(isNewSearch: false);
       }
     });
@@ -85,16 +119,19 @@ class _BookSearchPageState extends State<BookSearchPage> {
       }
       final favorites = await widget.authService.getFavorites();
       final readingList = await widget.authService.getReadingList();
+      final reviewed = await widget.authService.getReviewedList();
       setState(() {
         if (isNewSearch) {
           _books = results.isNotEmpty ? results : [];
         } else {
           final existingIds = _books.map((b) => b.id).toSet();
-          final newBooks = results.where((b) => !existingIds.contains(b.id)).toList();
+          final newBooks =
+              results.where((b) => !existingIds.contains(b.id)).toList();
           _books.addAll(newBooks);
         }
         _favoriteIds = favorites.map((book) => book.id).toSet();
         _readingListIds = readingList.map((book) => book.id).toSet();
+        _reviewedIds = reviewed.map((book) => book.id).toSet();
         _hasMore = results.length >= _maxResults;
       });
     } catch (e) {
@@ -184,7 +221,7 @@ class _BookSearchPageState extends State<BookSearchPage> {
         _controller.clear();
         _controller.text = 'subject:$genre';
         setState(() {
-          _hasMore = true; 
+          _hasMore = true;
         });
         _search(isNewSearch: true);
       },
@@ -215,9 +252,9 @@ class _BookSearchPageState extends State<BookSearchPage> {
                 icon: Icon(Icons.search),
                 onPressed: () {
                   setState(() {
-                    _hasMore = true; 
+                    _hasMore = true;
                   });
-                  _search(isNewSearch: true); 
+                  _search(isNewSearch: true);
                 },
               ),
             ),
@@ -233,7 +270,8 @@ class _BookSearchPageState extends State<BookSearchPage> {
                 onNotification: (scrollInfo) {
                   if (!_loading &&
                       _hasMore &&
-                      scrollInfo.metrics.pixels >= scrollInfo.metrics.maxScrollExtent - 200) {
+                      scrollInfo.metrics.pixels >=
+                          scrollInfo.metrics.maxScrollExtent - 200) {
                     _search(isNewSearch: false);
                   }
                   return false;
@@ -254,6 +292,7 @@ class _BookSearchPageState extends State<BookSearchPage> {
                     final book = _books[index];
                     final isFavorite = _favoriteIds.contains(book.id);
                     final isReadingList = _readingListIds.contains(book.id);
+                    final isReviewed = _reviewedIds.contains(book.id);
                     return Card(
                       elevation: 5,
                       child: InkWell(
@@ -261,11 +300,12 @@ class _BookSearchPageState extends State<BookSearchPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => BookDetailsPage(
-                                book: book,
-                                user: widget.user,
-                                authService: widget.authService,
-                              ),
+                              builder:
+                                  (_) => BookDetailsPage(
+                                    book: book,
+                                    user: widget.user,
+                                    authService: widget.authService,
+                                  ),
                             ),
                           );
                         },
@@ -292,10 +332,15 @@ class _BookSearchPageState extends State<BookSearchPage> {
                               ),
                             ),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8.0,
+                              ),
                               child: Text(
                                 book.authors.join(', '),
-                                style: TextStyle(fontSize: 14, color: Colors.grey),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey,
+                                ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -304,21 +349,66 @@ class _BookSearchPageState extends State<BookSearchPage> {
                             Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   IconButton(
                                     icon: Icon(
-                                      isFavorite ? Icons.favorite : Icons.favorite_border,
+                                      isFavorite
+                                          ? Icons.favorite
+                                          : Icons.favorite_border,
                                       color: isFavorite ? Colors.red : null,
                                     ),
                                     onPressed: () => _toggleFavorite(book),
                                   ),
                                   IconButton(
                                     icon: Icon(
-                                      isReadingList ? Icons.bookmark : Icons.bookmark_outline,
+                                      isReviewed
+                                          ? Icons.star
+                                          : Icons.star_border_outlined,
+                                      color: isReviewed ? Colors.amber : null,
                                     ),
-                                    tooltip: isReadingList ? 'Already in Reading List' : 'Read Later',
-                                    onPressed: () => _handleAddToReadingList(book),
+                                    tooltip:
+                                        isReviewed
+                                            ? 'Edit Review'
+                                            : 'Create a Review',
+                                    onPressed: () {
+                                      final callback = () async {
+                                        final reviewed =
+                                            await widget.authService
+                                                .getReviewedList();
+                                        setState(() {
+                                          _reviewedIds =
+                                              reviewed.map((b) => b.id).toSet();
+                                        });
+                                      };
+                                      isReviewed
+                                      ? showEditReviewDialog(
+                                        context: context,
+                                        book: book,
+                                        user: widget.user,
+                                        authService: widget.authService,
+                                        onReviewSubmitted: callback)
+                                      : showCreateReviewDialog(
+                                        context: context,
+                                        book: book,
+                                        user: widget.user,
+                                        authService: widget.authService,
+                                        onReviewSubmitted: callback);
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: Icon(
+                                      isReadingList
+                                          ? Icons.bookmark
+                                          : Icons.bookmark_outline,
+                                    ),
+                                    tooltip:
+                                        isReadingList
+                                            ? 'Already in Reading List'
+                                            : 'Read Later',
+                                    onPressed:
+                                        () => _handleAddToReadingList(book),
                                   ),
                                 ],
                               ),

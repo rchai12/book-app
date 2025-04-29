@@ -705,6 +705,29 @@ class AuthService {
     return null;
   }
 
+  Future<List<Book>> getReviewedList() async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      try {
+        QuerySnapshot querySnapshot = await _firestore
+            .collection('users')
+            .doc(user.uid)
+            .collection('books')
+            .where('reviewed', isEqualTo: true)
+            .get();
+        List<Book> reviewedListBooks = querySnapshot.docs.map((doc) {
+          return Book.fromFirestore(doc.data() as Map<String, dynamic>);
+        }).toList();
+        return reviewedListBooks;
+      } catch (e) {
+        print('Error fetching reading list books: $e');
+        throw Exception('Failed to fetch reading list books.');
+      }
+    } else {
+      throw Exception('No user is currently signed in.');
+    }
+  }
+
   Future<List<Book>> getBooks() async {
     User? user = _auth.currentUser;
     if (user != null) {

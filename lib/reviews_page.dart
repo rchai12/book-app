@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'book.dart';
 import 'authentication.dart';
@@ -53,20 +55,6 @@ class _ReviewsPageState extends State<ReviewsPage> {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: InkWell(
-                // TODO: implement a button to just edit review.
-                // onTap: () {
-                //   Navigator.push(
-                //     context,
-                //     MaterialPageRoute(
-                //       builder:
-                //           (_) => ReviewDialogs(
-                //               book: review,
-                //               user: widget.user,
-                //               authService: widget.authService,
-                //             ),
-                //       ),
-                //   );
-                // },
                 onTap: () {
                     showEditReviewDialog(
                       context: context,
