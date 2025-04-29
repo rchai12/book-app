@@ -3,7 +3,7 @@ import 'book.dart';
 import 'authentication.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-void showReviewDialog({
+void showEditReviewDialog({
   required BuildContext context,
   required Book book,
   required User user,
@@ -47,12 +47,24 @@ void showReviewDialog({
                 children: [
                   Text("Past Review:"),
                   SizedBox(height: 4),
+                  Row(
+                    children: List.generate(5, (i) {
+                      int rating =
+                          userRating ??
+                          0; // Defaults to 0 if review.rating is null
+                      return Icon(
+                        i < rating ? Icons.star : Icons.star_border,
+                        color: Colors.amber,
+                        size: 16,
+                      );
+                    }),
+                  ),
                   Text(
                     book.review ?? '',
                     style: TextStyle(fontStyle: FontStyle.italic),
                   ),
                   SizedBox(height: 10),
-                  Text("New Rating:"),
+                  Text("New Review:"),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: List.generate(5, (index) {

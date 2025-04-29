@@ -3,7 +3,7 @@ import 'book.dart';
 import 'authentication.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'book_details.dart';
-import 'review_edit_dialog.dart';
+import 'edit_review_dialog.dart';
 
 class ReviewsPage extends StatefulWidget {
   User user;
@@ -68,7 +68,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
                 //   );
                 // },
                 onTap: () {
-                    showReviewDialog(
+                    showEditReviewDialog(
                       context: context,
                       book: review,
                       user: widget.user,
@@ -92,7 +92,6 @@ class _ReviewsPageState extends State<ReviewsPage> {
                         ),
                       ),
                       const SizedBox(width: 12),
-
                       // Info on the right
                       Expanded(
                         child: Column(
