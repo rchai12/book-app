@@ -3,7 +3,7 @@ import 'book.dart';
 import 'authentication.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'book_details.dart';
-import 'review_dialogs.dart';
+import 'review_edit_dialog.dart';
 
 class ReviewsPage extends StatefulWidget {
   User user;
@@ -53,30 +53,28 @@ class _ReviewsPageState extends State<ReviewsPage> {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: InkWell(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (_) => BookDetailsPage(
-                            book: review,
-                            user: widget.user,
-                            authService: widget.authService,
-                          ),
-                    ),
-                  );
-                },
                 // TODO: implement a button to just edit review.
                 // onTap: () {
-                //   ReviewDialogs.showEditReviewDialog(
+                //   Navigator.push(
                 //     context,
-                //     title: "Alert",
-                //     message: "This is a simple alert dialog.", 
-                //     onConfirm: () { 
-                //       print("Alert dialog dismissed.");
-                //     },
+                //     MaterialPageRoute(
+                //       builder:
+                //           (_) => ReviewDialogs(
+                //               book: review,
+                //               user: widget.user,
+                //               authService: widget.authService,
+                //             ),
+                //       ),
                 //   );
-                // }
+                // },
+                onTap: () {
+                    showReviewDialog(
+                      context: context,
+                      book: review,
+                      user: widget.user,
+                      authService: widget.authService,
+                    );
+                },
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: Row(
