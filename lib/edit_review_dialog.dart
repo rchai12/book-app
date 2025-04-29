@@ -8,6 +8,7 @@ void showEditReviewDialog({
   required Book book,
   required User user,
   required AuthService authService,
+
 }) async {
   final TextEditingController reviewController = TextEditingController();
   int userRating = 0;
@@ -21,7 +22,7 @@ void showEditReviewDialog({
       userReview = reviewData['review'];
       book.rating = userRating;
       book.review = userReview;
-      reviewController.text = userReview;
+      // reviewController.text = userReview;
     }
   } catch (e) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -38,6 +39,7 @@ void showEditReviewDialog({
     builder: (context) {
       return StatefulBuilder(
         builder: (context, setState) {
+          final ScrollController textFieldScrollController = ScrollController();
           return AlertDialog(
             title: Text("Edit Review"),
             content: SizedBox(
@@ -45,13 +47,15 @@ void showEditReviewDialog({
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Past Review:"),
-                  SizedBox(height: 4),
+                  Text(
+                    "Past Review:",
+                    style: TextStyle(fontWeight: FontWeight.bold)
+                  ),
+                  SizedBox(height: 10),
                   Row(
                     children: List.generate(5, (i) {
                       int rating =
-                          userRating ??
-                          0; // Defaults to 0 if review.rating is null
+                          userRating;
                       return Icon(
                         i < rating ? Icons.star : Icons.star_border,
                         color: Colors.amber,
@@ -59,12 +63,16 @@ void showEditReviewDialog({
                       );
                     }),
                   ),
+                  SizedBox(height: 4),
                   Text(
-                    book.review ?? '',
+                    '"${book.review}"' ?? '',
                     style: TextStyle(fontStyle: FontStyle.italic),
                   ),
                   SizedBox(height: 10),
-                  Text("New Review:"),
+                  Text(
+                    "New Review:",
+                    style: TextStyle(fontWeight: FontWeight.bold)
+                  ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: List.generate(5, (index) {
@@ -81,28 +89,40 @@ void showEditReviewDialog({
                       );
                     }),
                   ),
-                  TextField(
-                    controller: reviewController,
-                    decoration: InputDecoration(
-                      hintText: 'Write your review here...',
-                      border: OutlineInputBorder(),
+                  SizedBox(
+                    width: 350,
+                    height: 100,
+                    child: TextField(
+                      controller: reviewController,
+                      scrollController: textFieldScrollController,
+                      decoration: InputDecoration(
+                        hintText: 'Write your review here...',
+                        border: OutlineInputBorder(),
+                      ),
+                      maxLines: null, // Allow unlimited lines (it will scroll instead of expanding)
+                      expands: true, // Makes the TextField fill the parent SizedBox height
+                      textAlignVertical: TextAlignVertical.top,
+                      onChanged: (value) {
+                        userReview = value;
+                      },
+                      keyboardType: TextInputType.multiline,
                     ),
-                    maxLines: 3,
-                    onChanged: (value) {
-                      userReview = value;
-                    },
                   ),
                 ],
               ),
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () {
+                  textFieldScrollController.dispose();
+                  Navigator.of(context).pop();
+                },
                 child: Text('Cancel'),
               ),
               TextButton(
                 onPressed: () async {
                   userReview = reviewController.text;
+                  textFieldScrollController.dispose();
                   Navigator.of(context).pop();
                   try {
                     await authService.addBookToReviews(book, userRating, userReview);
