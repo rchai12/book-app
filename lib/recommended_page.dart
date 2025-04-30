@@ -152,7 +152,7 @@ class _RecommendedPageState extends State<RecommendedPage> {
               ),
             )
           : _recommendedBooks.isEmpty
-              ? const Center(child: Text('No recommendations available.'))
+              ? const Center(child: Text('No recommendations available.\nPlease make sure you have selected\nyour favorite and disliked genres\nin the Profile Page.'))
               : PageView.builder(
                 itemCount: _recommendedBooks.length,
                 controller: PageController(viewportFraction: 0.85),

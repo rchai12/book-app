@@ -84,7 +84,7 @@ class _HomePageState extends State<HomePage> {
             padding: EdgeInsets.zero,
             children: [
               DrawerHeader(
-                decoration: BoxDecoration(color: Colors.grey[400]),
+                decoration: BoxDecoration(color: Colors.lightGreen),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

@@ -20,7 +20,14 @@ class BookApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Book App',
-      theme: ThemeData(primarySwatch: Colors.blue),
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSwatch(
+          primarySwatch: Colors.green,
+        ).copyWith(
+          secondary: Colors.greenAccent, // optional
+        ),
+        useMaterial3: true, // optional: enables Material 3 design
+      ),
       home: LoginPage(),
     );
   }

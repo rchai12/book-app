@@ -75,7 +75,7 @@ class _BookPageState extends State<BookPage> {
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         items: _navItems,
-        selectedItemColor: Colors.deepPurple,
+        selectedItemColor: const Color.fromARGB(255, 16, 194, 22),
         unselectedItemColor: Colors.grey,
         type: BottomNavigationBarType.fixed,
       ),

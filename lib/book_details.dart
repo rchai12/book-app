@@ -315,6 +315,7 @@ class _BookDetailsPageState extends State<BookDetailsPage> {
                 icon: Icon(Icons.auto_awesome),
                 label: Text('Analyze Book (AI)'),
                 style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white,
                   backgroundColor: Colors.teal,
                 ),
               ),

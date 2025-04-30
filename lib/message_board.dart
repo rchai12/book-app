@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-// import 'message_boards_page.dart';
-import 'message.dart';
 import 'package:intl/intl.dart';
 import 'authentication.dart';
+import 'message.dart';
 
 class MessageBoardPage extends StatefulWidget {
   final User user;
@@ -12,7 +11,9 @@ class MessageBoardPage extends StatefulWidget {
   final String messageBoardId;
   final String title;
   final String imageUrl;
-  const MessageBoardPage({super.key,
+
+  const MessageBoardPage({
+    super.key,
     required this.user,
     required this.authService,
     required this.messageBoardId,
@@ -21,36 +22,26 @@ class MessageBoardPage extends StatefulWidget {
   });
 
   @override
-  _MessageBoardPageState createState() => _MessageBoardPageState();
+  State<MessageBoardPage> createState() => _MessageBoardPageState();
 }
 
 class _MessageBoardPageState extends State<MessageBoardPage> {
-  late Future<List<Message>> _messagesFuture;
-  late bool _isAdmin = false;
   final TextEditingController _messageController = TextEditingController();
+  bool _isAdmin = false;
 
   @override
   void initState() {
     super.initState();
-    _loadMessages();
     _checkIfAdmin();
-  }
-
-  void _loadMessages() {
-    setState(() {
-      _messagesFuture = widget.authService.getMessagesFromCollection(messageBoardId: widget.messageBoardId);
-    });
   }
 
   Future<void> _checkIfAdmin() async {
     try {
-      DocumentSnapshot<Map<String, dynamic>>? userData = await widget.authService.getUserData();
-      if (userData != null && userData.exists) {
-        String role = userData.data()?['role'] ?? '';
-        setState(() {
-          _isAdmin = role == 'admin';
-        });
-      }
+      final userDoc = await widget.authService.getUserData();
+      final role = userDoc?.data()?['role'] ?? '';
+      setState(() {
+        _isAdmin = role == 'admin';
+      });
     } catch (e) {
       print('Error checking admin status: $e');
     }
@@ -60,11 +51,11 @@ class _MessageBoardPageState extends State<MessageBoardPage> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Confirm Delete'),
-        content: const Text('Are you sure you want to delete this message?'),
+        title: const Text('Delete Message?'),
+        content: const Text('This action cannot be undone.'),
         actions: [
-          TextButton(child: const Text('Cancel'), onPressed: () => Navigator.pop(context, false)),
-          TextButton(child: const Text('Delete'), onPressed: () => Navigator.pop(context, true)),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete')),
         ],
       ),
     );
@@ -76,134 +67,186 @@ class _MessageBoardPageState extends State<MessageBoardPage> {
           messageId: messageId,
           userId: widget.user.uid,
         );
-        _loadMessages();
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Message deleted.'), duration: Duration(seconds: 1),));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Message deleted')),
+        );
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error deleting: $e'), duration: Duration(seconds: 1),));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
       }
     }
   }
 
   Future<void> _sendMessage() async {
-    if (_messageController.text.isEmpty) return;
+    final text = _messageController.text.trim();
+    if (text.isEmpty) return;
+
     try {
       await widget.authService.addMessageToCollection(
         userId: widget.user.uid,
         sender: widget.user.displayName ?? 'Unknown User',
-        text: _messageController.text,
+        text: text,
         messageBoardId: widget.messageBoardId,
       );
       _messageController.clear();
-      _loadMessages();
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Message sent.'), duration: Duration(seconds: 1),));
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error sending message: $e'), duration: Duration(seconds: 1),));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error sending message: $e')),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(widget.title),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        foregroundColor: Colors.white,
       ),
       body: Stack(
         children: [
-          ColorFiltered(
-            colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.3), BlendMode.dstATop),
-            child: Image.network(
-              widget.imageUrl,
-              fit: BoxFit.cover,
-              height: double.infinity,
-              width: double.infinity,
+          // Background image
+          Container(
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: NetworkImage(widget.imageUrl),
+                fit: BoxFit.cover,
+              ),
             ),
           ),
-          Column(
-            children: [
-              Expanded(
-                child: StreamBuilder<QuerySnapshot>(
-                  stream: FirebaseFirestore.instance
-                      .collection('messageboard')
-                      .doc(widget.messageBoardId)
-                      .collection('messages')
-                      .orderBy('timestamp', descending: false)
-                      .snapshots(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Center(child: CircularProgressIndicator());
-                    }
-                    if (snapshot.hasError) {
-                      return Center(child: Text('Error: ${snapshot.error}'));
-                    }
-                    if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                      return Center(child: Text('No messages found.'));
-                    }
-                    final messages = snapshot.data!.docs.map((doc) {
-                      return Message.fromDoc(doc);
-                    }).toList();
-                    return ListView.builder(
-                      itemCount: messages.length,
-                      itemBuilder: (context, index) {
-                        final message = messages[index];
-                        final canDelete = _isAdmin || message.userId == widget.user.uid;
-                        final listTile = ListTile(
-                          title: Text('${message.sender}: ${message.text}'),
-                          subtitle: Text(
-                            DateFormat.yMMMd().add_jm().format(message.timestamp.toDate()),
-                          ),
-                        );
-                        return canDelete
-                            ? Dismissible(
-                                key: Key(message.id),
-                                direction: DismissDirection.endToStart,
-                                background: Container(
-                                  color: Colors.red,
-                                  alignment: Alignment.centerRight,
-                                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                                  child: const Icon(Icons.delete, color: Colors.white),
-                                ),
-                                confirmDismiss: (_) async {
-                                  await _deleteMessage(message.id);
-                                  return false;
-                                },
-                                child: listTile,
-                              )
-                            : listTile;
-                      },
-                    );
-                  },
+
+          // Dark overlay
+          Container(
+            color: Colors.black.withOpacity(0.6),
+          ),
+
+          // Foreground content
+          SafeArea(
+            child: Column(
+              children: [
+                Expanded(
+                  child: StreamBuilder<QuerySnapshot>(
+                    stream: FirebaseFirestore.instance
+                        .collection('messageboard')
+                        .doc(widget.messageBoardId)
+                        .collection('messages')
+                        .orderBy('timestamp', descending: false)
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      if (snapshot.hasError) {
+                        return Center(child: Text('Error: ${snapshot.error}', style: TextStyle(color: Colors.white)));
+                      }
+                      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                        return const Center(child: Text('No messages yet.', style: TextStyle(color: Colors.white70)));
+                      }
+
+                      final messages = snapshot.data!.docs.map((doc) => Message.fromDoc(doc)).toList();
+
+                      return ListView.builder(
+                        padding: const EdgeInsets.all(12),
+                        itemCount: messages.length,
+                        itemBuilder: (context, index) {
+                          final message = messages[index];
+                          final isOwn = message.userId == widget.user.uid;
+                          final canDelete = _isAdmin || isOwn;
+
+                          final messageCard = Card(
+                            color: Colors.white.withOpacity(0.9),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            margin: const EdgeInsets.symmetric(vertical: 6),
+                            child: ListTile(
+                              title: Text(message.sender, style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold)),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const SizedBox(height: 4),
+                                  Text(message.text, style: theme.textTheme.bodyMedium),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    DateFormat.yMMMd().add_jm().format(message.timestamp.toDate()),
+                                    style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                                  ),
+                                ],
+                              ),
+                              isThreeLine: true,
+                            ),
+                          );
+
+                          return canDelete
+                              ? Dismissible(
+                                  key: Key(message.id),
+                                  direction: DismissDirection.endToStart,
+                                  background: Container(
+                                    alignment: Alignment.centerRight,
+                                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                                    color: Colors.red,
+                                    child: const Icon(Icons.delete, color: Colors.white),
+                                  ),
+                                  confirmDismiss: (_) async {
+                                    await _deleteMessage(message.id);
+                                    return false;
+                                  },
+                                  child: messageCard,
+                                )
+                              : messageCard;
+                        },
+                      );
+                    },
+                  ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _messageController,
-                        decoration: InputDecoration(
-                          hintText: 'Enter your message...',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10.0),
+
+                /// Send Message Bar
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 6,
+                        offset: Offset(0, -1),
+                      )
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _messageController,
+                          maxLines: null,
+                          decoration: InputDecoration(
+                            hintText: 'Type your message...',
+                            fillColor: Colors.grey[100],
+                            filled: true,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              borderSide: BorderSide.none,
+                            ),
                           ),
                         ),
-                        maxLines: 3,
                       ),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.send),
-                      onPressed: _sendMessage,
-                    ),
-                  ],
+                      const SizedBox(width: 8),
+                      CircleAvatar(
+                        backgroundColor: theme.primaryColor,
+                        child: IconButton(
+                          icon: const Icon(Icons.send, color: Colors.white),
+                          onPressed: _sendMessage,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),

@@ -37,15 +37,15 @@ class _ReviewsPageState extends State<ReviewsPage> {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
 
-          final _reviewedBooks = snapshot.data ?? [];
+          final reviewedBooks = snapshot.data ?? [];
 
-          if (_reviewedBooks.isEmpty) {
+          if (reviewedBooks.isEmpty) {
             return Center(child: Text('No reviews yet.'));
           }
         return ListView.builder(
-          itemCount: _reviewedBooks.length,
+          itemCount: reviewedBooks.length,
           itemBuilder: (context, index) {
-            final review = _reviewedBooks[index];
+            final review = reviewedBooks[index];
             return Dismissible(
               key: Key('review_${review.id}'),
               direction: DismissDirection.endToStart,

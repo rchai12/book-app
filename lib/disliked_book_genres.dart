@@ -77,6 +77,9 @@ class _DislikedBookGenresPageState extends State<DislikedBookGenresPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Sort genres alphabetically
+    List<String> sortedGenres = List.from(_genres)..sort();
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Disliked Genres?!'),
@@ -87,18 +90,21 @@ class _DislikedBookGenresPageState extends State<DislikedBookGenresPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Question Header
             Text(
               _question,
               style: TextStyle(
-                fontSize: 20,
+                fontSize: 22,
                 fontWeight: FontWeight.bold,
               ),
             ),
             SizedBox(height: 20),
+
+            // Genre Selection Chips
             Wrap(
-              spacing: 10.0,
-              runSpacing: 10.0,
-              children: _genres.map((genre) {
+              spacing: 12.0,
+              runSpacing: 12.0,
+              children: sortedGenres.map((genre) {
                 return ChoiceChip(
                   label: Text(genre),
                   selected: _selectedGenres.contains(genre),
@@ -111,14 +117,26 @@ class _DislikedBookGenresPageState extends State<DislikedBookGenresPage> {
                       }
                     });
                   },
+                  selectedColor: Colors.green,
+                  backgroundColor: Colors.grey.shade200,
+                  labelStyle: TextStyle(
+                    color: _selectedGenres.contains(genre)
+                        ? Colors.white
+                        : Colors.black,
+                  ),
                 );
               }).toList(),
             ),
+
             SizedBox(height: 20),
+
+            Divider(),
+
+            // Display Selected Genres
             Text(
               'Your selected genres:',
               style: TextStyle(
-                fontSize: 16,
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -130,9 +148,22 @@ class _DislikedBookGenresPageState extends State<DislikedBookGenresPage> {
               style: TextStyle(fontSize: 16),
             ),
             SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _saveGenres,
-              child: Text('Save Your Genres'),
+
+            // Save Button
+            Center(
+              child: ElevatedButton(
+                onPressed: _saveGenres,
+                style: ElevatedButton.styleFrom(
+                  minimumSize: Size(200, 50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text(
+                  'Save Your Genres',
+                  style: TextStyle(fontSize: 16),
+                ),
+              ),
             ),
           ],
         ),

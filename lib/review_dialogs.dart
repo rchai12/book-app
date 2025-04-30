@@ -31,7 +31,7 @@ void showCreateReviewDialog({
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Review for: " + book.title,
+                    "Review for: ${book.title}",
                     style: TextStyle(fontWeight: FontWeight.bold)
                   ),
                   Row(
@@ -157,7 +157,7 @@ void showEditReviewDialog({
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Previous Review for " + book.title + ":",
+                    "Previous Review for ${book.title}:",
                     style: TextStyle(fontWeight: FontWeight.bold)
                   ),
                   SizedBox(height: 10),
