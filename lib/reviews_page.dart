@@ -1,8 +1,11 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'book.dart';
 import 'authentication.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'book_details.dart';
+import 'review_dialogs.dart';
 
 class ReviewsPage extends StatefulWidget {
   User user;
@@ -74,16 +77,24 @@ class _ReviewsPageState extends State<ReviewsPage> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: InkWell(
+                  // onTap: () {
+                  //   Navigator.push(
+                  //     context,
+                  //     MaterialPageRoute(
+                  //       builder: (_) => BookDetailsPage(
+                  //         book: review,
+                  //         user: widget.user,
+                  //         authService: widget.authService,
+                  //       ),
+                  //     ),
+                  //   );
+                  // },
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => BookDetailsPage(
-                          book: review,
-                          user: widget.user,
-                          authService: widget.authService,
-                        ),
-                      ),
+                    showEditReviewDialog(
+                      context: context,
+                      book: review,
+                      user: widget.user,
+                      authService: widget.authService,
                     );
                   },
                   child: Padding(

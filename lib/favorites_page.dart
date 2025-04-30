@@ -4,6 +4,7 @@ import 'book.dart';
 import 'book_details.dart';
 import 'authentication.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'review_dialogs.dart';
 
 class FavoritesPage extends StatefulWidget {
   final User user;
@@ -21,6 +22,7 @@ class FavoritesPage extends StatefulWidget {
 
 class _FavoritesPageState extends State<FavoritesPage> {
   List<Book> _favoriteBooks = [];
+  Set<String> _reviewedIds = {};
   Set<String> _readingListIds = {};
   bool _loading = true;
 
@@ -34,10 +36,12 @@ class _FavoritesPageState extends State<FavoritesPage> {
     setState(() => _loading = true);
     try {
       final favorites = await widget.authService.getFavorites();
+      final reviewedList = await widget.authService.getReviewedList();
       final readingList = await widget.authService.getReadingList();
 
       setState(() {
         _favoriteBooks = favorites;
+        _reviewedIds = reviewedList.map((book) => book.id).toSet();
         _readingListIds = readingList.map((book) => book.id).toSet();
       });
     } catch (e) {
@@ -108,6 +112,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
                     ),
                     itemBuilder: (context, index) {
                       final book = _favoriteBooks[index];
+                      final isReviewed = _reviewedIds.contains(book.id);
                       final isInReadingList = _readingListIds.contains(book.id);
                       return Card(
                         elevation: 5,
@@ -174,6 +179,41 @@ class _FavoritesPageState extends State<FavoritesPage> {
                                       padding: EdgeInsets.zero,
                                     ),
                                     IconButton(
+                                      icon: Icon(
+                                        isReviewed
+                                            ? Icons.star
+                                            : Icons.star_border_outlined,
+                                        color: isReviewed ? Colors.amber : null,
+                                      ),
+                                      tooltip:
+                                          isReviewed
+                                              ? 'Edit Review'
+                                              : 'Create a Review',
+                                      onPressed: () {
+                                        final showDialogFn =
+                                            isReviewed
+                                                ? showEditReviewDialog
+                                                : showCreateReviewDialog;
+                                        showDialogFn(
+                                          context: context,
+                                          book: book,
+                                          user: widget.user,
+                                          authService: widget.authService,
+                                          onReviewSubmitted: () async {
+                                            final reviewed =
+                                                await widget.authService
+                                                    .getReviewedList();
+                                            setState(() {
+                                              _reviewedIds =
+                                                  reviewed
+                                                      .map((b) => b.id)
+                                                      .toSet();
+                                          });
+                                        },
+                                      );
+                                    },
+                                  ),
+                                  IconButton(
                                       icon: Icon(
                                         _readingListIds.contains(book.id)
                                             ? Icons.bookmark

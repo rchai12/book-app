@@ -4,6 +4,7 @@ import 'authentication.dart';
 import 'book_details.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'reading_status.dart';
+import 'review_dialogs.dart';
 
 class ReadingStatusPage extends StatefulWidget {
   final ReadingStatus status;
@@ -24,6 +25,7 @@ class ReadingStatusPage extends StatefulWidget {
 class _ReadingStatusPageState extends State<ReadingStatusPage> {
   List<Book> _books = [];
   Set<String> _favoriteIds = {};
+  Set<String> _reviewedIds = {};
   bool _loading = true;
 
   @override
@@ -40,6 +42,7 @@ class _ReadingStatusPageState extends State<ReadingStatusPage> {
       setState(() {
         _books = readingList.where((book) => book.readingStatus == widget.status).toList();
         _favoriteIds = favorites.map((b) => b.id).toSet();
+        _reviewedIds = favorites.map((b) => b.id).toSet();
       });
     } catch (e) {
       print('Error: $e');
@@ -110,6 +113,7 @@ class _ReadingStatusPageState extends State<ReadingStatusPage> {
         ),
         itemBuilder: (context, index) {
           final book = _books[index];
+          final isReviewed = _reviewedIds.contains(book.id);
           final isFavorite = _favoriteIds.contains(book.id);
           return Card(
             elevation: 5,
@@ -135,7 +139,7 @@ class _ReadingStatusPageState extends State<ReadingStatusPage> {
                       fit: BoxFit.cover,
                     ),
                   Padding(
-                    padding: const EdgeInsets.all(8.0),
+                    padding: const EdgeInsets.all(7.5),
                     child: Text(
                       book.title,
                       style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -152,9 +156,39 @@ class _ReadingStatusPageState extends State<ReadingStatusPage> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  Spacer(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.sync_alt),
+                        tooltip: 'Move to Next Status',
+                        onPressed: () async {
+                          if (book.readingStatus != null) {
+                            final nextStatus = getNextStatus(
+                              book.readingStatus!,
+                            );
+                            await widget.authService.changeReadingStatus(
+                              book.id,
+                              nextStatus,
+                            );
+                            setState(() {
+                              _books.removeWhere((b) => b.id == book.id);
+                            });
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  '${book.title} moved to ${nextStatus.label}.',
+                                ),
+                                duration: Duration(seconds: 1),
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                    ],
+                  ),
                   Padding(
-                    padding: const EdgeInsets.all(8.0),
+                    padding: const EdgeInsets.all(0.0),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -166,28 +200,39 @@ class _ReadingStatusPageState extends State<ReadingStatusPage> {
                           onPressed: () => _toggleFavorite(book),
                         ),
                         IconButton(
+                          icon: Icon(
+                            isReviewed
+                                ? Icons.star
+                                : Icons.star_border_outlined,
+                            color: isReviewed ? Colors.amber : null,
+                          ),
+                          tooltip:
+                              isReviewed ? 'Edit Review' : 'Create a Review',
+                          onPressed: () {
+                            final showDialogFn =
+                                isReviewed
+                                    ? showEditReviewDialog
+                                    : showCreateReviewDialog;
+                            showDialogFn(
+                              context: context,
+                              book: book,
+                              user: widget.user,
+                              authService: widget.authService,
+                              onReviewSubmitted: () async {
+                                final reviewed =
+                                    await widget.authService.getReviewedList();
+                                setState(() {
+                                  _reviewedIds =
+                                      reviewed.map((b) => b.id).toSet();
+                                });
+                              },
+                            );
+                          },
+                        ),
+                        IconButton(
                           icon: Icon(Icons.bookmark_remove),
                           onPressed: () => _removeBook(book),
                           tooltip: 'Remove from Reading List',
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.sync_alt),
-                          tooltip: 'Move to Next Status',
-                          onPressed: () async {
-                            if (book.readingStatus != null) {
-                              final nextStatus = getNextStatus(book.readingStatus!);
-                              await widget.authService.changeReadingStatus(book.id, nextStatus);
-                              setState(() {
-                                _books.removeWhere((b) => b.id == book.id);
-                              });
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('${book.title} moved to ${nextStatus.label}.'),
-                                  duration: Duration(seconds: 1),
-                                ),
-                              );
-                            }
-                          },
                         ),
                       ],
                     ),
