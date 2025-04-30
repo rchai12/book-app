@@ -134,16 +134,42 @@ class AuthService {
     }
   }
 
+  // old doesn't work fully
+  // Future<void> updateName(String newName) async {
+  //   User? user = _auth.currentUser;
+  //   if (user != null) {
+  //     try {
+  //       await user.updateProfile(displayName: newName);
+  //       await user.reload();
+
+  //       print('Name updated successfully');
+  //     } on FirebaseAuthException catch (e) {
+  //       throw Exception('Failed to update name: ${e.message}');
+  //     }
+  //   } else {
+  //     throw Exception('No user is currently signed in.');
+  //   }
+  // }
+
   Future<void> updateName(String newName) async {
     User? user = _auth.currentUser;
+
     if (user != null) {
       try {
-        await user.updateProfile(displayName: newName);
+        // Update Firebase Auth display name
+        await user.updateDisplayName(newName);
         await user.reload();
+        user = _auth.currentUser;
 
-        print('Name updated successfully');
+        // Update Firestore user document
+        final userDocRef = FirebaseFirestore.instance.collection('users').doc(user?.uid);
+        await userDocRef.update({'name': newName});
+
+        print('Name updated successfully in Auth and Firestore.');
       } on FirebaseAuthException catch (e) {
         throw Exception('Failed to update name: ${e.message}');
+      } catch (e) {
+        throw Exception('Error updating name in Firestore: $e');
       }
     } else {
       throw Exception('No user is currently signed in.');
