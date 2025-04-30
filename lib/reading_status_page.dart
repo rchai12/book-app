@@ -143,7 +143,7 @@ class _ReadingStatusPageState extends State<ReadingStatusPage> {
                     child: Text(
                       book.title,
                       style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      maxLines: 2,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),

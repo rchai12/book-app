@@ -1,10 +1,8 @@
 import 'dart:ffi';
-
 import 'package:flutter/material.dart';
 import 'book.dart';
 import 'authentication.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'book_details.dart';
 import 'review_dialogs.dart';
 
 class ReviewsPage extends StatefulWidget {
