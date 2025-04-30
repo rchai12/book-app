@@ -1,5 +1,4 @@
-import 'package:bookapp/message_boards_page.dart';
-import 'package:bookapp/reviews_page.dart';
+import 'message_boards_page.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'authentication.dart';
@@ -10,7 +9,7 @@ import 'book_page.dart';
 import 'reviews_page.dart';
 
 class HomePage extends StatefulWidget {
-  User user;
+  final User user;
   final authService = AuthService();
   HomePage({super.key, required this.user});
 

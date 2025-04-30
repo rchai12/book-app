@@ -8,10 +8,10 @@ import 'review_dialogs.dart';
 
 class ReadingStatusPage extends StatefulWidget {
   final ReadingStatus status;
-  User user;
+  final User user;
   final AuthService authService;
 
-  ReadingStatusPage({
+  const ReadingStatusPage({
     super.key,
     required this.status,
     required this.user,

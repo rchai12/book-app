@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'message_boards_page.dart';
+// import 'message_boards_page.dart';
 import 'message.dart';
 import 'package:intl/intl.dart';
 import 'authentication.dart';
 
 class MessageBoardPage extends StatefulWidget {
-  User user;
+  final User user;
   final AuthService authService;
   final String messageBoardId;
   final String title;
   final String imageUrl;
-  MessageBoardPage({super.key,
+  const MessageBoardPage({super.key,
     required this.user,
     required this.authService,
     required this.messageBoardId,

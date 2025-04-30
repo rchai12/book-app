@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'book.dart';
-import 'preview_page.dart';
 import 'authentication.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'reading_status.dart';
@@ -62,8 +61,8 @@ class _BookDetailsPageState extends State<BookDetailsPage> {
           _userReview = reviewData['review'];
           widget.book.rating = _userRating;
           widget.book.review = _userReview;
-          print('Review: ${_userReview}');
-          print ('Rating: ${_userRating}');
+          print('Review: $_userReview');
+          print ('Rating: $_userRating');
         });
       }
     } catch (e) {

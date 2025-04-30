@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'authentication.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'book.dart';
+// import 'book.dart';
 import 'reading_status.dart';
 import 'reading_status_page.dart';
 
 class ReadingListPage extends StatelessWidget {
-  User user;
+  final User user;
   final AuthService authService;
 
-  ReadingListPage({
+  const ReadingListPage({
     super.key,
     required this.user,
     required this.authService,

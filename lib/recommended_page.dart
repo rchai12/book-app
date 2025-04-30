@@ -8,10 +8,10 @@ import 'reading_status.dart';
 import 'book_details.dart';
 
 class RecommendedPage extends StatefulWidget {
-  User user;
+  final User user;
   final AuthService authService;
   
-  RecommendedPage({
+  const RecommendedPage({
     super.key,
     required this.user,
     required this.authService,
@@ -186,7 +186,7 @@ class _RecommendedPageState extends State<RecommendedPage> {
                                 ClipRRect(
                                   borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                                   child: Image.network(
-                                    book.thumbnail ?? '',
+                                    book.thumbnail,
                                     height: constraints.maxHeight * 0.72,
                                     width: double.infinity,
                                     fit: BoxFit.cover,
@@ -211,7 +211,7 @@ class _RecommendedPageState extends State<RecommendedPage> {
                                         ),
                                         const SizedBox(height: 6),
                                         Text(
-                                          book.authors?.join(', ') ?? 'Unknown author',
+                                          book.authors.join(', '),
                                           style: const TextStyle(fontSize: 16, color: Colors.grey),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,

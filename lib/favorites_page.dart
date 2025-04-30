@@ -219,7 +219,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
                                             ? Icons.bookmark
                                             : Icons.bookmark_outline,
                                       ),
-                                      tooltip: _readingListIds.contains(book.id)
+                                      tooltip: isInReadingList
                                           ? 'Already in Reading List'
                                           : 'Read Later',
                                       onPressed: () => _handleAddToReadingList(book),

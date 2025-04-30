@@ -1,4 +1,4 @@
-import 'dart:ffi';
+// import 'dart:ffi';
 import 'package:flutter/material.dart';
 import 'book.dart';
 import 'authentication.dart';
@@ -6,10 +6,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'review_dialogs.dart';
 
 class ReviewsPage extends StatefulWidget {
-  User user;
+  final User user;
   final AuthService authService;
 
-  ReviewsPage({
+  const ReviewsPage({
     super.key,
     required this.user,
     required this.authService,

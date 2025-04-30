@@ -5,14 +5,13 @@ import 'book_details.dart';
 import 'authentication.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'reading_status.dart';
-import 'reading_status.dart';
 import 'review_dialogs.dart';
 
 class TrendingBooksPage extends StatefulWidget {
-  User user;
+  final User user;
   final AuthService authService;
 
-  TrendingBooksPage({
+  const TrendingBooksPage({
     super.key,
     required this.user,
     required this.authService,

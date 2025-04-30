@@ -8,10 +8,10 @@ import 'reading_status.dart';
 import 'review_dialogs.dart';
 
 class BookSearchPage extends StatefulWidget {
-  User user;
+  final User user;
   final AuthService authService;
 
-  BookSearchPage({super.key, required this.user, required this.authService});
+  const BookSearchPage({super.key, required this.user, required this.authService});
   @override
   _BookSearchPageState createState() => _BookSearchPageState();
 }
@@ -424,9 +424,9 @@ class _BookSearchPageState extends State<BookSearchPage> {
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color.fromARGB(255, 172, 190, 221),
-        child: Icon(Icons.filter_list),
         tooltip: 'Filter by Genre',
         onPressed: _showFilterDialog,
+        child: Icon(Icons.filter_list),
       ),
     );
   }

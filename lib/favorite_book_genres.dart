@@ -3,10 +3,10 @@ import 'authentication.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class FavoriteBookGenresPage extends StatefulWidget {
-  User user;
-  AuthService authService;
+  final User user;
+  final AuthService authService;
 
-  FavoriteBookGenresPage({
+  const FavoriteBookGenresPage({
     super.key,
     required this.user,
     required this.authService,
