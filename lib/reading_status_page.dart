@@ -39,10 +39,11 @@ class _ReadingStatusPageState extends State<ReadingStatusPage> {
     try {
       final readingList = await widget.authService.getReadingList();
       final favorites = await widget.authService.getFavorites();
+      final reviewed = await widget.authService.getReviewedList();
       setState(() {
         _books = readingList.where((book) => book.readingStatus == widget.status).toList();
         _favoriteIds = favorites.map((b) => b.id).toSet();
-        _reviewedIds = favorites.map((b) => b.id).toSet();
+        _reviewedIds = reviewed.map((b) => b.id).toSet();
       });
     } catch (e) {
       print('Error: $e');
